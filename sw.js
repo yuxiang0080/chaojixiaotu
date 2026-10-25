@@ -2,7 +2,7 @@
  * 策略：页面(navigation) 走网络优先，保证一上线就是新版本；静态资源走缓存优先，断网也能打开。
  * 更新：改这里的 VERSION 即可让所有设备下次打开时换新缓存。
  */
-const VERSION = 'sr-v20261026.0225';
+const VERSION = 'sr-v20261026.0226';
 const ASSETS = [
   './',
   './index.html',
