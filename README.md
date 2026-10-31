@@ -31,4 +31,4 @@
 
 `icons/icon.svg` 是从 `index.html` 原 favicon 的 SVG data URI 原样解码得到的，没有改配色、线条或 `viewBox`。`icons/icon-180.png` 由现有 180×180 的 `apple-touch-icon.png` 复制而来，保持原有蓝底兔子图标。192/512/maskable 三个 PNG 保持原样。
 
-旧入口文件不存在，所以没有额外的旧链接跳转页；如果以后需要兼容某个旧地址，再单独加一个跳转页，不要覆盖 `index.html`。
+旧入口文件不存在；为了兼容可能残留的旧地址，额外放了 `超级小兔2.1.html` 跳转页，访问它会自动回到 `./`。不要再覆盖 `index.html`。
