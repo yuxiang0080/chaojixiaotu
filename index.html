@@ -2,12 +2,12 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#FBF6EE" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14110E" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="超级小兔2.1">
-<title>超级小兔2.1</title>
+<meta name="apple-mobile-web-app-title" content="超级小兔2.2">
+<title>超级小兔2.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -144,6 +144,9 @@ input:focus,select:focus{outline:none;border-color:var(--brand);background:var(-
 .rr{display:flex;align-items:center;gap:6px;padding:9px 14px;font-size:13px;position:relative}
 .rr .rn2{flex:1;min-width:0;word-break:break-all;font-weight:500}.rr .rv{color:var(--text-2);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(20px);background:rgba(44,32,24,.95);color:#FFFCF7;padding:10px 16px;border-radius:14px;font-size:13px;display:flex;align-items:center;gap:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:300;box-shadow:0 6px 20px rgba(44,32,24,.22);max-width:90vw;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#storageWarn{display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:var(--red);color:#fff;padding:calc(8px + env(safe-area-inset-top)) 14px 8px;font-size:12px;font-weight:600;text-align:center;line-height:1.5;box-shadow:0 2px 8px rgba(0,0,0,.15)}
+#storageWarn.show{display:block}
+#storageWarn a{color:#fff;text-decoration:underline;cursor:pointer;font-weight:700}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
 .toast .tu{background:none;border:0;color:#B9D5EE;font-weight:700;font-size:13px;cursor:pointer;font-family:inherit;padding:0}
 .tag-btn{display:inline-block;background:var(--gray-soft);color:var(--text-2);padding:4px 10px;border-radius:14px;font-size:12px;margin-right:6px;cursor:pointer;user-select:none}
@@ -214,6 +217,16 @@ html[data-theme="blue"] .toast .tu{color:#B7D8F7}
 }
 @keyframes pageIn{from{opacity:0}to{opacity:1}}
 #app.page-in{animation:pageIn .18s ease-out}
+.badge.p{background:var(--purple-soft);color:var(--purple)}
+.bnote{color:var(--orange)!important;font-size:12px;margin-top:2px}
+.s-clear{border:0;background:none;color:var(--text-3);font-size:19px;line-height:1;padding:0 2px;cursor:pointer;display:none;flex-shrink:0;font-family:inherit}
+.s-clear.on{display:block}
+.s-clear:active{color:var(--text)}
+.batch-child{border-left:3px solid var(--purple);margin-left:14px;padding-left:11px;position:relative}
+.batch-child::before{content:'';position:absolute;left:-14px;top:50%;width:11px;border-top:2px dashed var(--purple);opacity:.4}
+.brow.storage-frozen{background:linear-gradient(90deg,rgba(139,111,160,.07),transparent 60%)}
+.brow.storage-cold{background:linear-gradient(90deg,rgba(91,130,181,.07),transparent 60%)}
+.scard:focus-visible,.row:focus-visible,.tb button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -222,10 +235,11 @@ html[data-theme="blue"] .toast .tu{color:#B7D8F7}
   <div class="hl">
     <button class="bk" id="backBtn" data-action="go-back" style="display:none">‹</button>
     <span class="brand" aria-hidden="true"><svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><path d="M37 46c-4-14-3-27 3-27s8 13 6 29"/><path d="M63 46c4-14 3-27-3-27s-8 13-6 29"/><circle cx="50" cy="59" r="19"/><path d="M43 58h.01M57 58h.01M50 64l-3 3h6zM50 67v4M50 71c-3 2-6 2-8 0M50 71c3 2 6 2 8 0"/></svg></span>
-    <h1 id="title">超级小兔2.1</h1>
+    <h1 id="title">超级小兔2.2</h1>
   </div>
   <div class="hd" id="hTodayBox"><button class="undo-btn" id="undoBtn" data-action="undo-last" title="撤销上一步" style="display:none">↶<span id="undoCount"></span></button><span id="hToday">--</span></div>
 </header>
+<div id="storageWarn"></div>
 <main id="app"></main>
 <nav class="tb">
   <button data-tab="home"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></span>报损</button>
@@ -233,7 +247,7 @@ html[data-theme="blue"] .toast .tu{color:#B7D8F7}
   <button data-tab="me"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>我的</button>
 </nav>
 <div class="mask" id="mask"><div class="sheet" id="sheet"></div></div>
-<div class="toast" id="toast"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 <input type="file" id="importFile" accept=".json,application/json" style="display:none;">
 <script>
 'use strict';
@@ -245,6 +259,17 @@ const roundQty=x=>{const n=Number(x);return isFinite(n)?Math.round(n*100)/100:0;
 const toDateStr=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
 const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);return x;};
 const addMonths=(d,n)=>{const x=new Date(d),day=x.getDate();x.setDate(1);x.setMonth(x.getMonth()+n);const last=new Date(x.getFullYear(),x.getMonth()+1,0).getDate();x.setDate(Math.min(day,last));return x;};
+const addHours=(d,n)=>{const x=new Date(d);x.setHours(x.getHours()+n);return x;};
+// 打烊时刻：D+n / 未开封保质期都落到当天打烊时间；小时规则不经过这里。
+const closeOf=dateLike=>{const d=new Date(dateLike);d.setHours(state.settings.closeHour,state.settings.closeMinute,0,0);return d;};
+const closeOfToday=()=>closeOf(today());
+const fmtDur=ms=>{
+  const a=Math.abs(ms);
+  if(a<60e3)return'不足1分钟';
+  if(a<3600e3)return`${Math.round(a/60e3)}分钟`;
+  if(a<86400e3){const h=Math.floor(a/3600e3),m=Math.floor((a%3600e3)/60e3);return m?`${h}小时${m}分`:`${h}小时`;}
+  return`${Math.floor(a/86400e3)}天`;
+};
 const diffDays=(a,b)=>Math.round((new Date(b.getFullYear(),b.getMonth(),b.getDate())-new Date(a.getFullYear(),a.getMonth(),a.getDate()))/864e5);
 const uid=p=>p+'_'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
 const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -276,7 +301,7 @@ const shortDate=s=>{if(!s)return'';const p=String(s).split('-');return p.length=
 const DEFAULT_CATEGORIES=['鲜果汁及液体制品','上允果酱','自制类物料','食品类','饮品装饰物','咖啡牛乳类'];
 const UNCAT='未分类';
 const STATUS_TXT={opened:'已开封',unopened:'未开封',used:'已用完',lost:'已报损'};
-const DEFAULT_SETTINGS={soonDays:3,lowStock:2};
+const DEFAULT_SETTINGS={soonDays:3,lowStock:2,closeHour:23,closeMinute:59};
 const DEFAULT_RULES=[
   {id:'r_milk',name:'鲜牛奶(已开封)',type:'days',value:2},{id:'r_oat',name:'燕麦奶(已开封)',type:'days',value:3},
   {id:'r_cream',name:'安佳淡奶油(已开封)',type:'days',value:3},{id:'r_rice',name:'大米厚乳(已开封)',type:'days',value:3},
@@ -291,7 +316,10 @@ const DEFAULT_RULES=[
   {id:'r_d3',name:'通用D+3',type:'days',value:3},{id:'r_matcha',name:'抹茶粉(已开封)',type:'months',value:1},
   {id:'r_houji',name:'焙茶粉(已开封)',type:'months',value:3},{id:'r_dry',name:'干物碎类(已开封)',type:'days',value:29},
   {id:'r_cherry',name:'樱桃罐头(已开封)',type:'days',value:14},{id:'r_ball',name:'白玉丸子(已开封)',type:'days',value:5},
-  {id:'r_leaf',name:'鲜叶类(已开封)',type:'days',value:8},{id:'r_same',name:'当天报损',type:'days',value:0}
+  {id:'r_leaf',name:'鲜叶类(已开封)',type:'days',value:8},{id:'r_same',name:'当天报损',type:'days',value:0},
+  {id:'r_h4',name:'茶汤/奶盖(已开封)',type:'hours',value:4},
+  {id:'r_h8',name:'小料/果切(已开封)',type:'hours',value:8},
+  {id:'r_h24',name:'鲜奶/奶油(开封24h)',type:'hours',value:24}
 ];
 const MAT_DATA=[['nfc黄皮汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc青提汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc青芒汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc杨桃汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc余甘汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc草莓汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['nfc葡萄汁','鲜果汁及液体制品','r_nfc','瓶','months',24],['青提柚预调液','鲜果汁及液体制品','r_pre','瓶','days',2],['树番茄预调液','鲜果汁及液体制品','r_pre','瓶','days',2],['油柑杨桃预调液','鲜果汁及液体制品','r_pre','瓶','days',2],['奇兰黄皮芒预调液','鲜果汁及液体制品','r_pre','瓶','days',2],['辣青芒预调液','鲜果汁及液体制品','r_pre','瓶','days',2],['冷萃咖啡液','鲜果汁及液体制品','r_cold','瓶','none',0],['安佳淡奶油','咖啡牛乳类','r_cream','瓶','months',9],['光明鲜牛奶','咖啡牛乳类','r_milk','瓶','days',15],['椰皇水','鲜果汁及液体制品','r_d3','瓶','months',9],['农夫山泉茉莉花茶','鲜果汁及液体制品','r_jas','瓶','months',12],['茉香绿茶原萃液','鲜果汁及液体制品','r_ex5','瓶','months',12],['炼乳','咖啡牛乳类','r_cond','瓶','months',15],['德兰兹大米厚乳','咖啡牛乳类','r_rice','瓶','months',9],['咖啡大师燕麦奶','咖啡牛乳类','r_oat','瓶','months',12],['柚子酱','鲜果汁及液体制品','r_yuzu','瓶','months',12],['抹茶粉','鲜果汁及液体制品','r_matcha','袋','months',12],['胡柚液','上允果酱','r_sy','瓶','months',12],['树番茄果酱','上允果酱','r_sy','瓶','months',12],['青苹果酱','上允果酱','r_sy','瓶','months',12],['酸角浓浆','上允果酱','r_sy','瓶','months',12],['泰奶奶油','自制类物料','r_creamself','盒','none',0],['抹茶奶油','自制类物料','r_creamself','盒','none',0],['伯爵奶油','自制类物料','r_creamself','盒','none',0],['杏子淋酱','自制类物料','r_apricot','瓶','none',0],['岩兰草糖浆','自制类物料','r_ylc','瓶','none',0],['开心果稀释酱','自制类物料','r_pista','瓶','none',0],['玄米牛奶','自制类物料','r_d2','瓶','none',0],['泰茶淋酱','自制类物料','r_sauce','瓶','none',0],['奶底淋酱','自制类物料','r_sauce','瓶','none',0],['抹茶淋酱','自制类物料','r_sauce','瓶','none',0],['焙茶淋酱','自制类物料','r_sauce','瓶','none',0],['柚子茶冻','食品类','r_jelly','盒','none',0],['白玉丸子','食品类','r_ball','包','months',12],['椰子碎片','食品类','r_dry','袋','months',12],['开心果碎','食品类','r_dry','袋','months',12],['黄油脆片','食品类','r_dry','袋','months',12],['脆啵啵','食品类','r_dry','包','months',12],['焙茶粉','食品类','r_houji','袋','months',18],['酸角干','食品类','r_dry','袋','none',0],['樱桃罐头','饮品装饰物','r_cherry','罐','months',24],['绿色叶片(柠檬叶等)','饮品装饰物','r_leaf','盒','none',0],['金边奇兰茶底','鲜果汁及液体制品','r_ex5','包','months',12],['怡泉苏打水','鲜果汁及液体制品','r_same','瓶','months',9],['蓝柑糖浆','鲜果汁及液体制品','r_syrup29','瓶','months',12],['海盐焦糖风味糖浆','鲜果汁及液体制品','r_syrup29','瓶','months',30],['接骨木风味糖浆','鲜果汁及液体制品','r_syrup29','瓶','months',30],['巧克力酱','咖啡牛乳类','r_syrup29','瓶','months',12],['柠檬汁','鲜果汁及液体制品','r_same','瓶','none',0]];
 
@@ -309,22 +337,35 @@ const OLD_KEYS=['store_expiry_manager_v2','store_expiry_manager_v1'];
 const SNAP_KEY='super_rabbit_snapshots_v1';
 const THEME_KEY='super_rabbit_theme_v1';
 const SNAP_MAX=3;
-const defaultState=()=>({version:4,categories:DEFAULT_CATEGORIES.slice(),rules:JSON.parse(JSON.stringify(DEFAULT_RULES)),materials:JSON.parse(JSON.stringify(DEFAULT_MATERIALS)),batches:[],losses:[],snoozes:[],settings:{...DEFAULT_SETTINGS}});
+const defaultState=()=>({version:5,categories:DEFAULT_CATEGORIES.slice(),rules:JSON.parse(JSON.stringify(DEFAULT_RULES)),materials:JSON.parse(JSON.stringify(DEFAULT_MATERIALS)),batches:[],losses:[],snoozes:[],settings:{...DEFAULT_SETTINGS}});
 let state=defaultState();
 let snapshots=[],currentTheme='paper';
 const UNDO_MAX=5;
 let undoStack=[],lastSavedState=null,undoReady=false,undoRestoring=false,currentActionLabel='操作',lastUndoAt=0;
+let _matIndexCache=null,_expiryCache=null,_persistTimer=null,_persistPending=false,pendingStorageSync=null;
 
 /* ===== 数据校验与清洗 ===== */
 const dedupe=arr=>{const seen=new Set();return arr.filter(x=>{if(!x||!x.id||seen.has(x.id))return false;seen.add(x.id);return true;});};
 const clamp=(v,min,max,fb)=>{const n=Number(v);return isFinite(n)?Math.min(max,Math.max(min,n)):fb;};
-const normalizeState=obj=>{
-  const s=Object.assign(defaultState(),obj||{});
+const normalizeCategories=s=>{
   s.categories=(Array.isArray(s.categories)?s.categories:[]).filter(c=>typeof c==='string'&&c.trim()).map(c=>c.trim());
   if(!s.categories.length)s.categories=DEFAULT_CATEGORIES.slice();
   s.categories=[...new Set(s.categories)];
-  s.settings={soonDays:Math.round(clamp(s.settings?.soonDays,1,30,DEFAULT_SETTINGS.soonDays)),lowStock:clamp(s.settings?.lowStock,0,1000,DEFAULT_SETTINGS.lowStock)};
-  s.rules=dedupe((Array.isArray(s.rules)?s.rules:[]).filter(r=>r&&r.id!=null&&r.name!=null&&String(r.name).trim()&&(r.type==='days'||r.type==='months')).map(r=>{
+  return s;
+};
+
+const normalizeSettings=s=>{
+  s.settings={
+    soonDays:Math.round(clamp(s.settings?.soonDays,1,30,DEFAULT_SETTINGS.soonDays)),
+    lowStock:clamp(s.settings?.lowStock,0,1000,DEFAULT_SETTINGS.lowStock),
+    closeHour:Math.round(clamp(s.settings?.closeHour,0,23,DEFAULT_SETTINGS.closeHour)),
+    closeMinute:Math.round(clamp(s.settings?.closeMinute,0,59,DEFAULT_SETTINGS.closeMinute))
+  };
+  return s;
+};
+
+const normalizeRules=s=>{
+  s.rules=dedupe((Array.isArray(s.rules)?s.rules:[]).filter(r=>r&&r.id!=null&&r.name!=null&&String(r.name).trim()&&(r.type==='days'||r.type==='months'||r.type==='hours')).map(r=>{
     const x={...r};
     x.id=String(x.id).trim();
     x.name=String(x.name).trim();
@@ -332,6 +373,10 @@ const normalizeState=obj=>{
     return x;
   }));
   if(!s.rules.length)s.rules=JSON.parse(JSON.stringify(DEFAULT_RULES));
+  return s;
+};
+
+const normalizeMaterials=s=>{
   s.materials=dedupe((Array.isArray(s.materials)?s.materials:[]).filter(m=>m&&m.id!=null&&m.name!=null&&String(m.name).trim()).map(m=>{
     const x=Object.assign({},m);
     x.id=String(x.id).trim();
@@ -343,6 +388,8 @@ const normalizeState=obj=>{
     x.unit=(typeof x.unit==='string'&&x.unit.trim())?x.unit.trim():'瓶';
     x.unopenedType=(x.unopenedType==='days'||x.unopenedType==='months')?x.unopenedType:'none';
     x.unopenedValue=clamp(x.unopenedValue,0,999,0);
+    x.openedType=['days','months','hours','none'].includes(x.openedType)?x.openedType:'none';
+    x.openedValue=clamp(x.openedValue,0,999,0);
     x.disabled=!!x.disabled;
     x.isPrepared=!!x.isPrepared;
     x.pinned=!!x.pinned;
@@ -350,6 +397,10 @@ const normalizeState=obj=>{
   }));
   if(!s.materials.length)s.materials=JSON.parse(JSON.stringify(DEFAULT_MATERIALS));
   s.materials.forEach(m=>m.categories.forEach(c=>{if(!s.categories.includes(c))s.categories.push(c);}));
+  return s;
+};
+
+const normalizeBatches=s=>{
   const matIds=new Set(s.materials.map(m=>m.id));
   s.batches=dedupe((Array.isArray(s.batches)?s.batches:[]).filter(b=>b&&b.id!=null&&b.materialId!=null&&matIds.has(String(b.materialId).trim())).map(b=>{
     const x=Object.assign({},b);
@@ -358,15 +409,29 @@ const normalizeState=obj=>{
     x.note=String(x.note??'');
     delete x.ruleId;delete x.unit;delete x.ruleType;delete x.ruleValue;
     ['openDate','expireDate','createDate','usedDate','lossDate'].forEach(k=>{if(x[k]){const d=parseDateStr(x[k]);x[k]=d?toDateStr(d):'';}});
+    const at=Number(x.openAt);x.openAt=Number.isFinite(at)&&at>0?at:0;
+    if(!x.openAt&&x.openDate){const d=parseDateStr(x.openDate);if(d){d.setHours(12,0,0,0);x.openAt=d.getTime();}}
+    x.storage=['cold','frozen','room'].includes(x.storage)?x.storage:'';
+    x.parentId=x.parentId?String(x.parentId):'';
+    if(x.splitFrom!=null)x.splitFrom=Math.max(0,roundQty(x.splitFrom));
+    if(x.usedQty!=null)x.usedQty=Math.max(0,roundQty(x.usedQty));
     x.qty=Math.max(0,roundQty(x.qty));
     if(!['opened','unopened','used','lost'].includes(x.status))x.status=x.qty>0?'opened':'used';
     return x;
   }));
+  const batchMap=new Map(s.batches.map(b=>[b.id,b]));
+  s.batches.forEach(b=>{const p=b.parentId?batchMap.get(b.parentId):null;if(b.parentId&&(!p||p.id===b.id||p.materialId!==b.materialId))b.parentId='';});
+  return s;
+};
+
+const normalizeLosses=s=>{
   s.losses=dedupe((Array.isArray(s.losses)?s.losses:[]).filter(l=>l&&l.id!=null).map(l=>{
     const x=Object.assign({},l);
     x.id=String(x.id).trim();
     x.batchId=String(x.batchId??'').trim();
     x.materialId=String(x.materialId??'').trim();
+    x.parentId=x.parentId?String(x.parentId):'';
+    x.storage=['cold','frozen','room'].includes(x.storage)?x.storage:'';
     x.materialName=String(x.materialName??'');
     x.unit=String(x.unit??'');
     x.note=String(x.note??'');
@@ -377,6 +442,10 @@ const normalizeState=obj=>{
     x.fullLoss=x.fullLoss!==false;
     return x;
   }));
+  return s;
+};
+
+const normalizeSnoozes=s=>{
   const batchIdsAll=new Set(s.batches.map(b=>b.id));
   const seenSnooze=new Set();
   s.snoozes=(Array.isArray(s.snoozes)?s.snoozes:[]).filter(sn=>{
@@ -388,7 +457,19 @@ const normalizeState=obj=>{
     const d=parseDateStr(sn.until);
     return {batchId:String(sn.batchId).trim(),until:d?toDateStr(d):'',forever:!!sn.forever};
   }).filter(sn=>sn.forever||sn.until>todayStr());
-  s.version=4;
+  return s;
+};
+
+const normalizeState=obj=>{
+  const s=Object.assign(defaultState(),obj||{});
+  normalizeCategories(s);
+  normalizeSettings(s);
+  normalizeRules(s);
+  normalizeMaterials(s);
+  normalizeBatches(s);
+  normalizeLosses(s);
+  normalizeSnoozes(s);
+  s.version=5;
   return s;
 };
 let loadOK=false;const loadState=()=>{
@@ -403,18 +484,43 @@ let loadOK=false;const loadState=()=>{
     return true;
   }catch(e){return false;}
 };
-const persist=()=>{
+const persistNow=()=>{
+  clearTimeout(_persistTimer);_persistTimer=null;
+  _persistPending=false;
+  if (state.losses.length > LOSS_AUTO_KEEP * 1.2) {
+    autoPruneData();
+  }
   const next=JSON.stringify(state);
   try{
     localStorage.setItem(DB_KEY,next);
+    const warn=document.getElementById('storageWarn');
+    if(warn)warn.classList.remove('show');
     if(undoReady&&!undoRestoring&&lastSavedState&&next!==lastSavedState){
       undoStack.push({label:currentActionLabel||'操作',at:Date.now(),snapshot:lastSavedState});
       if(undoStack.length>UNDO_MAX)undoStack.shift();
       lastUndoAt=Date.now();
     }
     lastSavedState=next;
+    invalidateMatIndex();
     return true;
-  }catch(e){alert('保存失败：本地存储空间已满。\n当前修改仍在内存中，请立即到「我的 → 导出 JSON」备份，否则刷新后会丢失。');return false;}
+  }catch(e){
+    const warn=document.getElementById('storageWarn');
+    const isQuota=e&&(e.name==='QuotaExceededError'||e.name==='NS_ERROR_DOM_QUOTA_REACHED'||e.code===22);
+    const isSecurity=e&&(e.name==='SecurityError'||e.name==='InvalidStateError');
+    if(warn){
+      warn.innerHTML=(isQuota?'存储空间已满':(isSecurity?'浏览器禁止本地存储（无痕/隐私模式）':'数据保存失败'))
+        +'，请立即 <a data-action="export-json">导出备份</a>，否则刷新后会丢失。';
+      warn.classList.add('show');
+    }
+    showToast(isQuota?'存储已满，请导出备份':'保存失败，请导出备份');
+    return false;
+  }
+};
+const persist=()=>{
+  clearTimeout(_persistTimer);
+  _persistPending=true;
+  _persistTimer=setTimeout(persistNow,0);
+  return true;
 };
 const UNDO_LABELS={
   loss:'报损', 'loss-all':'一键报损', 'quick-used':'用完物料', 'do-quick-open':'开封批次', 'do-quick-make':'制作物料', 'do-loss':'报损',
@@ -423,7 +529,8 @@ const UNDO_LABELS={
   'del-rule':'删除规则', 'save-settings':'保存设置', 'save-batch-cat':'管理分类物料', 'quick-clean':'过期清理',
   'extend-batch':'顺延到期', 'save-stocktake':'盘点', 'do-snooze':'稍后处理', 'unsnooze':'恢复提醒', 'undo-loss':'撤销报损',
   'card-open-first':'开封批次', 'card-loss-earliest':'报损', 'toggle-pin':'置顶物料', 'restore-snapshot':'恢复快照',
-  'clean-old-data':'清理历史数据', 'reset-all':'清空数据', 'do-reset-all':'清空全部数据', 'trigger-import':'导入数据'
+  'clean-old-data':'清理历史数据', 'reset-all':'清空数据', 'do-reset-all':'清空全部数据', 'trigger-import':'导入数据',
+  'do-split':'分装批次', 'thaw-batch':'解冻批次'
 };
 const loadSnapshots=()=>{
   try{
@@ -443,7 +550,9 @@ const addSnapshot=(label,force)=>{
   const json=JSON.stringify(state);
   const last=snapshots[snapshots.length-1];
   if(!force&&last&&JSON.stringify(last.state)===json)return null;
-  const snap={id:uid('s'),at:Date.now(),label:label||'快照',state:JSON.parse(json)};
+  const cloned = JSON.parse(json);
+  delete cloned.losses; // 快照不保存报损记录，恢复时保留当前 losses
+  const snap={id:uid('s'),at:Date.now(),label:label||'快照',state:cloned};
   snapshots.push(snap);
   if(snapshots.length>SNAP_MAX)snapshots.shift();
   if(!saveSnapshots()){snapshots=snapshots.filter(s=>s.id!==snap.id);return null;}
@@ -460,21 +569,40 @@ loadState();
 const getRule=id=>state.rules.find(r=>r.id===id)||null;
 const getMat=id=>state.materials.find(m=>m.id===id)||null;
 const getBatch=id=>state.batches.find(b=>b.id===id)||null;
-const ruleOfBatch=(b,mat)=>{if(!mat)return null;const r=getRule(mat.ruleId);return r?{type:r.type,value:r.value}:null;};
-const ruleTxt=r=>!r?'':(r.type==='months'?`+${r.value}月`:`D+${r.value}`);
+const ruleOfBatch=(b,mat)=>{
+  if(!mat)return null;
+  // 物料上显式填写的“开封后有效期”优先于规则库；0 天表示当天报损（D+0）。
+  const ov=Number(mat.openedValue);
+  if(mat.openedType&&mat.openedType!=='none'&&Number.isFinite(ov)&&ov>=0)
+    return{type:mat.openedType,value:ov};
+  const r=getRule(mat.ruleId);
+  return r?{type:r.type,value:r.value}:null;
+};
+const hasOpenedRule=mat=>!!ruleOfBatch(null,mat);
+const ruleTxt=r=>!r?'':(r.type==='months'?`+${r.value}月`:r.type==='hours'?`+${r.value}小时`:`D+${r.value}`);
 const batchDueDate=(batch,mat)=>{
   if(!batch||!mat)return null;
-  if(batch.expireDate){const d=parseDateStr(batch.expireDate);if(d)return d;}
+  if(batch.expireDate){const d=parseDateStr(batch.expireDate);if(d)return closeOf(d);}
   if(batch.status==='opened'){
-    if(!batch.openDate)return null;
     const r=ruleOfBatch(batch,mat);if(!r)return null;
-    const base=parseDateStr(batch.openDate);if(!base)return null;
-    return r.type==='months'?addMonths(base,Number(r.value)||0):addDays(base,Number(r.value)||0);
+    if(r.type==='hours'){
+      const base=batch.openAt?new Date(batch.openAt):parseDateStr(batch.openDate);
+      if(!base)return null;
+      return addHours(base,Number(r.value)||0);
+    }
+    const base=parseDateStr(batch.openDate)||(batch.openAt?new Date(batch.openAt):null);
+    if(!base)return null;
+    const target=r.type==='months'
+      ?addMonths(base,Number(r.value)||0)
+      :addDays(base,Number(r.value)||0);
+    return closeOf(target);
   }
   if(batch.status==='unopened'){
     if(mat.unopenedType&&mat.unopenedType!=='none'&&mat.unopenedValue>0){
-      const base=parseDateStr(batch.createDate);if(!base)return null;
-      return mat.unopenedType==='months'?addMonths(base,mat.unopenedValue):addDays(base,mat.unopenedValue);
+      const base=parseDateStr(batch.createDate)||(batch.createdAt?new Date(batch.createdAt):null);
+      if(!base)return null;
+      const target=mat.unopenedType==='months'?addMonths(base,mat.unopenedValue):addDays(base,mat.unopenedValue);
+      return closeOf(target);
     }
   }
   return null;
@@ -487,6 +615,7 @@ const pushLoss=(b,m,qty,note,extra)=>{
     qty:roundQty(qty),openDate:b?b.openDate||'':'',dueDate:info.due?toDateStr(info.due):'',ruleTxt:info.ruleLabel,
     date:todayStr(),note:note||'',createdAt:Date.now(),prevStatus:b?b.status:'',prevQty:b?roundQty(b.qty):0,fullLoss:true,reasons:[]
   },extra||{});
+  if(b&&b.parentId){loss.parentId=b.parentId;loss.storage=b.storage||'';}
   loss.reasons=Array.isArray(loss.reasons)?[...new Set(loss.reasons.filter(v=>typeof v==='string'&&v.trim()).map(v=>v.trim()))]:[];
   state.losses.push(loss);
   return loss;
@@ -496,6 +625,7 @@ const getSnooze=batchId=>state.snoozes.find(s=>s.batchId===batchId)||null;
 const isSnoozed=batchId=>{const s=getSnooze(batchId);if(!s)return false;return s.forever||!!s.until&&todayStr()<s.until;};
 const clearSnooze=batchId=>{state.snoozes=state.snoozes.filter(s=>s.batchId!==batchId);};
 const buildMatIndex=()=>{
+  if(_matIndexCache)return _matIndexCache;
   const idx=new Map(),matMap=new Map(state.materials.map(m=>[m.id,m]));
   for(const b of state.batches){
     const e=idx.get(b.materialId)||{qty:0,active:[],earliest:null,everHad:false};
@@ -510,8 +640,10 @@ const buildMatIndex=()=>{
     idx.set(b.materialId,e);
   }
   for(const e of idx.values())e.qty=roundQty(e.qty);
+  _matIndexCache=idx;
   return idx;
 };
+const invalidateMatIndex=()=>{_matIndexCache=null;};
 function* activeBatches(){
   for(const b of state.batches){
     if(b.status!=='opened'&&b.status!=='unopened')continue;
@@ -522,13 +654,21 @@ function* activeBatches(){
   }
 }
 const getExpiryLists=()=>{
-  const t=today(),n=state.settings.soonDays,todayList=[],soonList=[];
+  const now=Date.now(),ts=todayStr(),endToday=closeOfToday().getTime(),soonMs=state.settings.soonDays*86400e3;
+  const snoozedSet=new Set(state.snoozes.filter(s=>s.forever||(s.until&&ts<s.until)).map(s=>s.batchId));
+  const todayList=[],soonList=[];
   for(const{b,m,due} of activeBatches()){
-    if(isSnoozed(b.id))continue;
-    const d=diffDays(t,due);
-    if(d<=0)todayList.push({batch:b,mat:m,due,d});else if(d<=n)soonList.push({batch:b,mat:m,due,d});
+    if(snoozedSet.has(b.id))continue;
+    const t=due.getTime();
+    if(t<=endToday){
+      todayList.push({batch:b,mat:m,due,d:Math.ceil((t-now)/86400e3)});
+    }else if(t-now<=soonMs){
+      soonList.push({batch:b,mat:m,due,d:Math.ceil((t-now)/86400e3)});
+    }
   }
-  const cmp=(a,b)=>a.due-b.due;todayList.sort(cmp);soonList.sort(cmp);return[todayList,soonList];
+  const cmp=(a,b)=>a.due-b.due;
+  todayList.sort(cmp);soonList.sort(cmp);
+  return[todayList,soonList];
 };
 const lossTime=r=>{
   const n=Number(r.createdAt);
@@ -561,7 +701,14 @@ const agoLabel=ts=>{
 };
 const weekStart=()=>{const t=today();return addDays(t,-((t.getDay()+6)%7));};
 const weekLossCount=()=>{const start=weekStart().getTime();return state.losses.filter(r=>lossTime(r)>=start).length;};
-const latestLoss=()=>state.losses.slice().sort((a,b)=>lossTime(b)-lossTime(a))[0]||null;
+const latestLoss=()=>{
+  let latest=null,latestT=-1;
+  for(const r of state.losses){
+    const t=lossTime(r);
+    if(t>latestT){latestT=t;latest=r;}
+  }
+  return latest;
+};
 const timeAgo=ts=>{
   if(!ts)return '—';
   const diff=Math.max(0,Date.now()-ts);
@@ -592,13 +739,13 @@ const recentMaterialIds=(limit=5)=>{
 const matUrgency=(e,t)=>{
   if(!e||!e.active.some(b=>Number(b.qty)>1e-6))return 3;
   if(!e.earliest)return 2;
-  return diffDays(t,e.earliest)<=0?0:1;
+  return e.earliest.getTime()<=closeOfToday().getTime()?0:1;
 };
 const healthReport=()=>{
   const t=today(),idx=buildMatIndex(),noRule=[],noDue=[],overdue=[],never=[];
   for(const m of state.materials){
     if(m.disabled)continue;
-    if(!getRule(m.ruleId))noRule.push(m);
+    if(!hasOpenedRule(m))noRule.push(m);
     if(!(idx.get(m.id)?.everHad))never.push(m);
   }
   for(const b of state.batches){
@@ -607,7 +754,7 @@ const healthReport=()=>{
     const m=getMat(b.materialId);if(!m||m.disabled)continue;
     const due=batchDueDate(b,m);
     if(!due)noDue.push({b,m});
-    else{const d=diffDays(t,due);if(d<0)overdue.push({b,m,due,d});}
+    else if(due.getTime()<Date.now()){const d=diffDays(t,due);overdue.push({b,m,due,d});}
   }
   noDue.sort((a,b)=>a.m.name.localeCompare(b.m.name,'zh-CN'));
   overdue.sort((a,b)=>a.due-b.due);
@@ -622,9 +769,10 @@ const healthReport=()=>{
 
 /* ===== UI 状态 ===== */
 let currentTab='home',subView='',stockQuery='',stockView='',stockSort='default',soonOpen=false,calOffset=0,logOpen=new Set(),logInited=false,logQuery='';
+let logMonthData=new Map();
 let lastMake = { id: null, time: 0 }; 
-const APP_NAME='超级小兔2.1';
-const SUB_TITLES={log:'报损记录',advanced:'高级设置',health:'🩺 数据体检'};
+const APP_NAME='超级小兔2.2';
+const SUB_TITLES={log:'报损记录',used:'使用记录',advanced:'高级设置',health:'🩺 数据体检'};
 const resetUI=()=>{subView='';stockQuery='';stockView='';stockSort='default';soonOpen=false;calOffset=0;logOpen.clear();logInited=false;logQuery='';lastMake={id:null,time:0};clearTimeout(toastTimer);$('toast').classList.remove('show');toastUndo=null;};
 const applyTheme=(theme,save)=>{
   currentTheme=theme==='blue'?'blue':'paper';
@@ -644,16 +792,69 @@ const updateHeader=()=>{
   if(subView){$('title').textContent=SUB_TITLES[subView]||'';$('backBtn').style.display='';}
   else{$('title').textContent=APP_NAME;$('backBtn').style.display='none';}
 };
+const LOSS_AUTO_KEEP = 2000;      // 报损记录保留上限
+const BATCH_AUTO_KEEP_DAYS = 180; // used/lost 批次保留天数
+
+const autoPruneData = () => {
+  let prunedLosses = 0, prunedBatches = 0;
+
+  // 1) 清理 180 天前的 used / lost 批次（opened / unopened 一律保留）
+  const cutoff = addDays(today(), -BATCH_AUTO_KEEP_DAYS);
+  const cutoffStr = toDateStr(cutoff);
+  const beforeBatchLen = state.batches.length;
+  state.batches = state.batches.filter(b => {
+    if (b.status !== 'used' && b.status !== 'lost') return true;
+    const d = b.lossDate || b.usedDate || b.openDate || b.createDate || '';
+    if (!d) return true;
+    return d >= cutoffStr; // 字符串日期比较，YYYY-MM-DD 有效
+  });
+  prunedBatches = beforeBatchLen - state.batches.length;
+
+  // 2) 报损记录超过上限时，按 createdAt 保留最近 N 条
+  if (state.losses.length > LOSS_AUTO_KEEP) {
+    const sorted = state.losses.slice().sort((a, b) => lossTime(b) - lossTime(a));
+    const keep = sorted.slice(0, LOSS_AUTO_KEEP);
+    const keepIds = new Set(keep.map(x => x.id));
+    const beforeLen = state.losses.length;
+    state.losses = state.losses.filter(x => keepIds.has(x.id));
+    prunedLosses = beforeLen - state.losses.length;
+  }
+
+  // 3) 清理指向已删除批次的 snoozes（避免残留）
+  const batchIds = new Set(state.batches.map(b => b.id));
+  state.snoozes = state.snoozes.filter(s => batchIds.has(s.batchId));
+
+  return { prunedLosses, prunedBatches };
+};
+
 const render=(keepScroll=false)=>{
   const scrollY=window.scrollY;updateHeader();
-  const fn=subView?{log:renderLog,advanced:renderAdvanced,health:renderHealth}[subView]:{home:renderHome,stock:renderStock,me:renderMe}[currentTab]||renderHome;
+  invalidateMatIndex();
+  const freshHome=currentTab==='home'&&!subView;
+  _expiryCache=freshHome?getExpiryLists():null;
+  const fn=subView?{log:renderLog,used:renderUsed,advanced:renderAdvanced,health:renderHealth}[subView]:{home:renderHome,stock:renderStock,me:renderMe}[currentTab]||renderHome;
   const app=$('app');
   app.classList.remove('page-in');
-  app.innerHTML=fn();
+  let appHtml;
+  try {
+    appHtml = fn();
+  } catch (err) {
+    console.error('Render failed:', err);
+    appHtml = `<div class="empty" style="padding:80px 20px 40px">
+    <div style="font-size:15px;font-weight:600;margin-bottom:10px;color:var(--text)">页面渲染出错</div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:20px;word-break:break-all">${esc(err && err.message || String(err))}</div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:16px">数据仍在内存中，请立即导出备份后再尝试操作。</div>
+    <button class="btn p" data-action="export-json" style="margin-bottom:8px">导出 JSON 备份</button>
+    <button class="btn gh" data-action="reset-all">清空数据重新开始</button>
+  </div>`;
+  }
+  app.innerHTML=appHtml;
+  app.querySelectorAll('.row[data-action]').forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;});
   if(!keepScroll){void app.offsetWidth;app.classList.add('page-in');}
   document.querySelectorAll('.tb button').forEach(b=>b.classList.toggle('active',b.dataset.tab===currentTab));
-  if(currentTab==='home'&&!subView){const [t]=getExpiryLists();document.title=t.length?`(${t.length}) ${APP_NAME}`:APP_NAME;}
+  if(freshHome&&_expiryCache){const [t]=_expiryCache;document.title=t.length?`(${t.length}) ${APP_NAME}`:APP_NAME;}
   else document.title=APP_NAME;
+  _expiryCache=null;
   window.scrollTo({top:keepScroll?scrollY:0});
   if(currentTab==='stock'&&!subView)applyStockFilter();
   if(subView==='log')applyLogFilter();
@@ -661,15 +862,29 @@ const render=(keepScroll=false)=>{
 
 /* ===== 首页 ===== */
 const renderHome=()=>{
-  const [todays,soon]=getExpiryLists();
+  const [todays,soon]=_expiryCache||getExpiryLists();
   const taskHtml=(x,isToday)=>{
     const{ruleLabel}=describeBatch(x.batch,x.mat);
     const txt=x.batch.status==='opened'?(x.batch.expireDate?'指定到期':(ruleLabel||'⚠无规则')):'未开封到期';
-    const when=isToday?(x.d===0?'今日到期':`已过期 ${-x.d} 天`):(x.d===0?'今天':`${x.d} 天后`);
+    const dueMs=x.due.getTime(),nowMs=Date.now();
+    const dueTxt=`${pad(x.due.getHours())}:${pad(x.due.getMinutes())}`;
+    let when;
+    if(dueMs<=nowMs)when=`已过期 ${fmtDur(nowMs-dueMs)}`;
+    else if(dueMs-nowMs<86400e3)when=`剩 ${fmtDur(dueMs-nowMs)}`;
+    else{const dd=diffDays(today(),x.due);when=dd<=0?`今天 ${dueTxt} 前`:`${dd} 天后`;}
+    const noteTxt=x.batch.note?` · <b style="color:var(--text)">📝 ${esc(x.batch.note)}</b>`:'';
     const acts=isToday?`<button class="btn mini gh" data-action="snooze" data-id="${esc(x.batch.id)}">稍后</button><button class="btn mini loss" data-action="loss" data-id="${esc(x.batch.id)}">报损</button>`:'';
-    return `<div class="task"><div class="task-t"><div class="tname">${esc(x.mat.name)} ${x.batch.status==='unopened'?'<span class="badge gy">未开封</span>':''}</div><div class="tqty ${isToday?'z':''}">${roundQty(x.batch.qty)}${esc(x.mat.unit||'')}</div></div><div class="task-b"><div class="tmeta">${x.batch.openDate?shortDate(x.batch.openDate)+' → ':''}${shortDate(toDateStr(x.due))}（${esc(txt)}）· <span class="${isToday?'bad':'warn'}">${when}</span></div>${acts}</div></div>`;
+    return `<div class="task"><div class="task-t"><div class="tname">${esc(x.mat.name)} ${x.batch.status==='unopened'?'<span class="badge gy">未开封</span>':''}</div><div class="tqty ${isToday?'z':''}">${roundQty(x.batch.qty)}${esc(x.mat.unit||'')}</div></div><div class="task-b"><div class="tmeta">${x.batch.openDate?shortDate(x.batch.openDate)+' → ':''}${shortDate(toDateStr(x.due))}（${esc(txt)}）· <span class="${isToday?'bad':'warn'}">${when}</span>${noteTxt}</div>${acts}</div></div>`;
   };
-  const week=weekLossCount(),last=latestLoss();
+  let week=0,last=null,lastT=-1;
+  {
+    const start=weekStart().getTime();
+    for(const r of state.losses){
+      const t=lossTime(r);
+      if(t>=start) week++;
+      if(t>lastT){lastT=t;last=r;}
+    }
+  }
   const recent=last?`最近 · ${timeAgo(lossTime(last))} · 报损「${esc(last.materialName)}」`:'最近暂无报损记录';
   const now=new Date();
   return `<div class="sg"><div class="stat r" data-action="jump-today"><b>${todays.length}</b><span>今日报损 ›</span></div><div class="stat y" data-action="jump-soon"><b>${soon.length}</b><span>即将报损 ›</span></div></div>
@@ -693,7 +908,7 @@ const renderStock=()=>{
   const sortText={default:'智能排序',expiry:'按到期',qty:'按库存'}[stockSort]||'智能排序';
 
   const manageBtn=stockView.startsWith('cat:')?`<div class="group-card" style="margin-top:8px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:13px;color:var(--text-2)">将物料添加到当前分类</div><button class="btn p mini" data-action="batch-manage-cat" data-cat="${esc(stockView.slice(4))}">管理物料</button></div>`:'';
-  const topBar=`<div class="sb"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="stockSearch" type="text" placeholder="搜索物料/别名…" value="${esc(stockQuery)}"></div><button class="btn gh mini" data-action="toggle-sort" style="width:74px;padding:0">${sortText}</button><button class="btn gh sq" data-action="set-view" data-view="calendar" title="日历">📅</button><button class="btn gh mini" data-action="open-stocktake">盘点</button></div><div class="chips">${chips}</div><div class="hint" style="margin:6px 4px 0">长按卡片：添加 / 开封 / 报损</div>${manageBtn}`;
+  const topBar=`<div class="sb"><div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="stockSearch" type="text" placeholder="搜索物料/别名…" value="${esc(stockQuery)}"><button class="s-clear${stockQuery?' on':''}" data-action="clear-stock-search" aria-label="清除搜索">×</button></div><button class="btn gh mini" data-action="toggle-sort" style="width:74px;padding:0">${sortText}</button><button class="btn gh sq" data-action="set-view" data-view="calendar" title="日历">📅</button><button class="btn gh mini" data-action="open-stocktake">盘点</button></div><div class="chips">${chips}</div><div class="hint" style="margin:6px 4px 0">长按卡片：添加 / 开封 / 报损</div>${manageBtn}`;
 
   let mats=state.materials.filter(m=>{
     if(stockView==='disabled')return m.disabled;
@@ -738,8 +953,8 @@ const renderStock=()=>{
 const matCardHtml=(m,e)=>{
   e=e||{qty:0,active:[],earliest:null,everHad:false};
   const q=roundQty(e.qty),bs=e.active,low=state.settings.lowStock,soonDays=state.settings.soonDays;
-  const tags=[],ruleMissing=!getRule(m.ruleId);
-  const expired=!!(!m.disabled&&e.earliest&&diffDays(today(),e.earliest)<0);
+  const tags=[],ruleMissing=!hasOpenedRule(m);
+  const expired=!!(!m.disabled&&e.earliest&&e.earliest.getTime()<=Date.now());
 
   if(m.disabled) tags.push('<span class="scard-tag gy">已停用</span>');
   else {
@@ -750,10 +965,16 @@ const matCardHtml=(m,e)=>{
       else if(q<=low)tags.push('<span class="scard-tag y">低库存</span>');
     }
     if(e.earliest){
-      const dd=diffDays(today(),e.earliest);
-      if(dd<0)tags.push(`<span class="scard-tag r">过期${-dd}天</span>`);
-      else if(dd===0)tags.push('<span class="scard-tag r">今日到期</span>');
-      else tags.push(`<span class="scard-tag ${dd<=soonDays?'y':'g'}">剩${dd}天</span>`);
+      const ms=e.earliest.getTime()-Date.now();
+      const pastDays=Math.ceil(ms/86400e3);
+      if(ms<=0){
+        tags.push(`<span class="scard-tag r">${-ms<86400e3?`过期${fmtDur(-ms)}`:`过期${-pastDays}天`}</span>`);
+      }else if(ms<86400e3){
+        tags.push(`<span class="scard-tag ${ms<=4*3600e3?'r':'y'}">剩${fmtDur(ms)}</span>`);
+      }else{
+        const days=Math.max(1,diffDays(today(),e.earliest));
+        tags.push(`<span class="scard-tag ${days<=soonDays?'y':'g'}">剩${days}天</span>`);
+      }
     }else if(bs.length>0&&!ruleMissing){
       const hasUnopenedRule=m.unopenedType&&m.unopenedType!=='none'&&m.unopenedValue>0;
       const allUnopened=bs.every(b=>b.status==='unopened');
@@ -771,11 +992,13 @@ const matCardHtml=(m,e)=>{
   let catDisplay=m.categories[0]||'';
   if(stockView.startsWith('cat:')){const c=stockView.slice(4);if(m.categories.includes(c))catDisplay=c;}
 
-  return `<div class="scard${expired?' expired':''}" data-action="open-mat-detail" data-id="${esc(m.id)}" data-name="${esc(m.name.toLowerCase())}" data-alias="${esc((m.alias||'').toLowerCase())}"><div class="scard-head"><div class="scard-name" title="${esc(m.name)}">${esc(m.name)}</div><button class="pin-btn ${m.pinned?'on':''}" data-action="toggle-pin" data-id="${esc(m.id)}" title="${m.pinned?'取消置顶':'置顶'}" aria-label="${m.pinned?'取消置顶':'置顶'}" aria-pressed="${m.pinned?'true':'false'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l-1 7 3 3H7l3-3-1-7zM12 13v8"/></svg></button></div><div class="scard-qty ${qcls}">${q}<span>${esc(m.unit||'')}</span></div>${detail}<div class="scard-foot"><span class="scard-cat">${esc(catDisplay)}</span><span class="scard-tags">${tags.join('')}</span></div></div>`;
+  return `<div class="scard${expired?' expired':''}" role="button" tabindex="0" data-action="open-mat-detail" data-id="${esc(m.id)}" data-name="${esc(m.name.toLowerCase())}" data-alias="${esc((m.alias||'').toLowerCase())}"><div class="scard-head"><div class="scard-name" title="${esc(m.name)}">${esc(m.name)}</div><button class="pin-btn ${m.pinned?'on':''}" data-action="toggle-pin" data-id="${esc(m.id)}" title="${m.pinned?'取消置顶':'置顶'}" aria-label="${m.pinned?'取消置顶':'置顶'}" aria-pressed="${m.pinned?'true':'false'}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l-1 7 3 3H7l3-3-1-7zM12 13v8"/></svg></button></div><div class="scard-qty ${qcls}">${q}<span>${esc(m.unit||'')}</span></div>${detail}<div class="scard-foot"><span class="scard-cat">${esc(catDisplay)}</span><span class="scard-tags">${tags.join('')}</span></div></div>`;
 };
 const applyStockFilter=()=>{
   const inp=$('stockSearch');if(!inp)return;
   const raw=inp.value.trim(),q=raw.toLowerCase();
+  const clr=inp.parentElement.querySelector('.s-clear');
+  if(clr)clr.classList.toggle('on',!!raw);
   let any=false;
   document.querySelectorAll('#stockGrid .scard').forEach(card=>{
     const show=!q||card.dataset.name.includes(q)||(card.dataset.alias||'').includes(q);
@@ -812,10 +1035,10 @@ const renderMe=()=>{
   const snapSub=lastSnap?`${snapshots.length} 份 · 最近 ${timeAgo(lastSnap.at)}`:'自动保留最近 3 份';
   return `<div class="group-title">数据状态</div><div class="group-card">${undoRow}${healthRow}</div>
   <div class="group-title">外观</div><div class="group-card" style="padding:12px 14px"><div class="theme-options"><button class="theme-opt ${currentTheme==='paper'?'active':''}" data-action="set-theme" data-theme="paper" aria-pressed="${currentTheme==='paper'}"><span class="sw paper"></span>暖纸</button><button class="theme-opt ${currentTheme==='blue'?'active':''}" data-action="set-theme" data-theme="blue" aria-pressed="${currentTheme==='blue'}"><span class="sw blue"></span>晴空白蓝</button></div><div class="hint" style="margin:8px 0 0">深色自动跟随系统；主题只保存在本机，不影响数据与撤销。</div></div>
-  <div class="group-title">提醒参数</div><div class="group-card" style="padding:14px"><label>即将报损提前天数（天）<input id="setSoon" type="number" min="1" max="30" step="1" value="${s.soonDays}"></label><label>低库存阈值<input id="setLow" type="number" min="0" max="1000" value="${s.lowStock}"></label><div class="rbtn"><button class="btn p" data-action="save-settings">保存参数</button></div></div>
+  <div class="group-title">提醒参数</div><div class="group-card" style="padding:14px"><label>即将报损提前天数（天）<input id="setSoon" type="number" min="1" max="30" step="1" value="${s.soonDays}"></label><label>低库存阈值<input id="setLow" type="number" min="0" max="1000" value="${s.lowStock}"></label><label>打烊时间（D+n 的到期时刻）<div style="display:flex;gap:8px;margin-top:5px"><select id="setCloseH" style="flex:1;margin-top:0">${Array.from({length:24},(_,h)=>`<option value="${h}" ${s.closeHour===h?'selected':''}>${pad(h)} 时</option>`).join('')}</select><select id="setCloseM" style="flex:1;margin-top:0">${[0,10,20,30,40,50,59].map(m=>`<option value="${m}" ${s.closeMinute===m?'selected':''}>${pad(m)} 分</option>`).join('')}</select></div></label><div class="rbtn"><button class="btn p" data-action="save-settings">保存参数</button></div><div class="hint" style="margin:8px 0 0">D+n 以开封当天为起点，第 n 天打烊前用完；小时规则从开封时刻起算，与打烊无关。</div></div>
   <div class="group-title">报损 TOP5</div>${topHtml}
   <div class="group-title">数据备份</div><div class="group-card"><div class="row" data-action="snapshot-manager"><span class="rn">本地快照</span><span class="rs" style="color:var(--text-2)">${snapSub}</span><span class="chev">›</span></div><div style="padding:14px"><div class="rbtn"><button class="btn p" data-action="export-json">导出 JSON</button><button class="btn gh" data-action="export-stock-csv">导出库存 CSV</button></div><div class="rbtn"><button class="btn gh" data-action="trigger-import" style="width:100%">导入 JSON 备份</button></div></div></div>
-  <div class="group-title">更多</div><div class="group-card"><div class="row" data-action="open-sub" data-sub="log"><span class="rn">报损记录</span><span class="rs" style="color:var(--text-2)">${state.losses.length} 条</span><span class="chev">›</span></div><div class="row" data-action="open-sub" data-sub="advanced"><span class="rn">高级设置</span><span class="rs" style="color:var(--text-2)">分类 · 规则 · 清理</span><span class="chev">›</span></div></div>`;
+  <div class="group-title">更多</div><div class="group-card"><div class="row" data-action="open-sub" data-sub="log"><span class="rn">报损记录</span><span class="rs" style="color:var(--text-2)">${state.losses.length} 条</span><span class="chev">›</span></div><div class="row" data-action="open-sub" data-sub="used"><span class="rn">使用记录</span><span class="rs" style="color:var(--text-2)">${state.batches.filter(b=>b.status==='used').length} 条</span><span class="chev">›</span></div><div class="row" data-action="open-sub" data-sub="advanced"><span class="rn">高级设置</span><span class="rs" style="color:var(--text-2)">分类 · 规则 · 清理</span><span class="chev">›</span></div></div>`;
 };
 
 const renderHealth=()=>{
@@ -824,7 +1047,7 @@ const renderHealth=()=>{
   const more=n=>n>limit?`<div class="hint" style="padding:0 14px 10px">仅显示前 ${limit} 项，共 ${n} 项</div>`:'';
   const noRuleRows=r.noRule.slice(0,limit).map(m=>`<div class="row" data-action="open-edit-material" data-id="${esc(m.id)}"><span class="rn">${esc(m.name)}</span><span class="rs" style="color:var(--red)">配置规则</span><span class="chev">›</span></div>`).join('')+more(r.noRule.length);
   const noDueRows=r.noDue.slice(0,limit).map(({b,m})=>`<div class="row" data-action="open-mat-detail" data-id="${esc(m.id)}"><span class="rn">${esc(m.name)}</span><span class="rs" style="color:var(--orange)">${roundQty(b.qty)}${esc(m.unit||'')} · 无到期</span><span class="chev">›</span></div>`).join('')+more(r.noDue.length);
-  const overRows=r.overdue.slice(0,limit).map(({b,m,d})=>`<div class="row" data-action="open-mat-detail" data-id="${esc(m.id)}"><span class="rn">${esc(m.name)}</span><span class="rs" style="color:var(--red)">过期 ${-d} 天 · ${roundQty(b.qty)}${esc(m.unit||'')}</span><span class="chev">›</span></div>`).join('')+more(r.overdue.length);
+  const overRows=r.overdue.slice(0,limit).map(({b,m,due})=>{const ms=Date.now()-due.getTime(),dd=diffDays(today(),due);return `<div class="row" data-action="open-mat-detail" data-id="${esc(m.id)}"><span class="rn">${esc(m.name)}</span><span class="rs" style="color:var(--red)">过期 ${ms<86400e3?fmtDur(ms):(dd===0?'今天':`${-dd} 天`)} · ${roundQty(b.qty)}${esc(m.unit||'')}</span><span class="chev">›</span></div>`;}).join('')+more(r.overdue.length);
   const neverRows=r.never.slice(0,limit).map(m=>`<div class="row" data-action="open-add-batch" data-id="${esc(m.id)}"><span class="rn">${esc(m.name)}</span><span class="rs" style="color:var(--text-2)">从未建批次</span><span class="chev">＋</span></div>`).join('')+more(r.never.length);
   const dupRows=r.dup.slice(0,limit).map(g=>{const x=g[0];return `<div class="row" data-action="open-sub" data-sub="log"><span class="rn">${esc(x.materialName)}</span><span class="rs" style="color:var(--orange)">${g.length} 条重复 · ${esc(x.date)}</span><span class="chev">›</span></div>`;}).join('')+more(r.dup.length);
   return `<div class="sb" style="margin-top:12px"><button class="btn p mini" data-action="refresh-health">重新扫描</button><span class="hint" style="margin:0">共 ${r.total} 项待关注，点击条目可直接处理</span></div>
@@ -836,8 +1059,18 @@ const renderHealth=()=>{
   ${section('从未建批次',r.never.length,neverRows,'所有物料都有过批次')}`;
 };
 
+const logRowHtml=(r,batchIds)=>{
+  const reasonTxt=(r.reasons||[]).join('、');
+  const stTxt=r.storage==='frozen'?'冷冻分装':r.storage==='cold'?'冷藏分装':r.storage==='room'?'常温分装':'';
+  const searchStr=((r.materialName||'')+' '+(reasonTxt||'')+' '+(r.note||'')).toLowerCase();
+  const canUndo=!!r.batchId&&batchIds.has(r.batchId);
+  const actionHtml=!r.batchId?'<span class="badge gy">盘点记录</span>':(!canUndo?'<span class="badge gy">批次已删</span>':`<button class="btn xs gh" data-action="undo-loss" data-id="${esc(r.id)}">撤销</button>`);
+  return `<div class="brow log-item" data-search="${esc(searchStr)}" style="padding-left:14px;background:var(--card)"><div class="bi"><div class="bt">${esc(r.materialName)}　${roundQty(r.qty)}${esc(r.unit||'')}${r.fullLoss===false?'<span class="badge y" style="margin-left:4px">部分</span>':''}</div><div class="bs">开封 ${esc(r.openDate||'—')} · 应报损 ${esc(r.dueDate||'—')}（${esc(r.ruleTxt||'—')}）· 报损于 ${esc(r.date)}${stTxt?` · <b style="color:var(--purple)">${stTxt}</b>`:''}${reasonTxt?' · <b style="color:var(--text)">原因：'+esc(reasonTxt)+'</b>':''}${r.note?' · <b style="color:var(--text)">备注：'+esc(r.note)+'</b>':''}</div></div>
+      ${actionHtml}</div>`;
+};
 const renderLog=()=>{
   let list=state.losses.slice().sort((a,b)=>lossTime(b)-lossTime(a));
+  logMonthData.clear();
   
   if(!list.length)return `<div class="group-title">报损记录</div><div class="group-card"><div class="empty">还没有报损记录</div></div>`;
   
@@ -846,21 +1079,20 @@ const renderLog=()=>{
   
   let html=`<div class="group-title" style="padding-bottom:10px">报损记录 <span>${list.length} 条</span></div>
   <div class="sb" style="margin-top:0">
-    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="logSearch" placeholder="搜索物料或备注(如:盘亏)…" value="${esc(logQuery)}"></div>
+    <div class="search-wrap"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="text" id="logSearch" placeholder="搜索物料或备注(如:盘亏)…" value="${esc(logQuery)}"><button class="s-clear${logQuery?' on':''}" data-action="clear-log-search" aria-label="清除搜索">×</button></div>
     <button class="btn gh mini" data-action="export-csv">导出CSV</button>
   </div>`;
   const batchIds=new Set(state.batches.map(b=>b.id));
   for(const ym of Object.keys(groups).sort().reverse()){
     const items=groups[ym],isOpen=logOpen.has(ym),label=ym==='未知'?'未知月份':`${ym.slice(0,4)}年${ym.slice(5,7)}月`;
-    html+=`<div class="log-month" data-open="${isOpen?1:0}">`;
+    logMonthData.set(ym,{items,batchIds});
+    html+=`<div class="log-month" data-open="${isOpen?1:0}" data-ym="${esc(ym)}">`;
     html+=`<div class="group-title" data-action="toggle-log-month" data-ym="${esc(ym)}"><span>${isOpen?'▾':'▸'} ${esc(label)}</span><span>${items.length} 条</span></div>`;
-    html+=`<div class="group-card log-body"${isOpen?'':' style="display:none"'}>`+items.map(r=>{
-      const reasonTxt=(r.reasons||[]).join('、');
-      const searchStr=((r.materialName||'')+' '+(reasonTxt||'')+' '+(r.note||'')).toLowerCase();
-      const canUndo=!!r.batchId&&batchIds.has(r.batchId);
-      return `<div class="brow log-item" data-search="${esc(searchStr)}" style="padding-left:14px;background:var(--card)"><div class="bi"><div class="bt">${esc(r.materialName)}　${roundQty(r.qty)}${esc(r.unit||'')}${r.fullLoss===false?'<span class="badge y" style="margin-left:4px">部分</span>':''}</div><div class="bs">开封 ${esc(r.openDate||'—')} · 应报损 ${esc(r.dueDate||'—')}（${esc(r.ruleTxt||'—')}）· 报损于 ${esc(r.date)}${reasonTxt?' · <b style="color:var(--text)">原因：'+esc(reasonTxt)+'</b>':''}${r.note?' · <b style="color:var(--text)">备注：'+esc(r.note)+'</b>':''}</div></div>
-      ${canUndo?`<button class="btn xs gh" data-action="undo-loss" data-id="${esc(r.id)}">撤销</button>`:'<span class="badge gy">自动记账</span>'}</div>`;
-    }).join('')+'</div>';
+    if(isOpen){
+      html+=`<div class="group-card log-body">`+items.map(r=>logRowHtml(r,batchIds)).join('')+'</div>';
+    }else{
+      html+=`<div class="group-card log-body" style="display:none" data-lazy="1"></div>`;
+    }
     html+='</div>';
   }
   return html+'<div class="empty" id="logEmpty" style="display:none">没有匹配的记录</div>';
@@ -868,10 +1100,20 @@ const renderLog=()=>{
 const applyLogFilter=()=>{
   const inp=$('logSearch');if(!inp)return;
   const q=inp.value.trim().toLowerCase();
+  const clr=inp.parentElement.querySelector('.s-clear');
+  if(clr)clr.classList.toggle('on',!!q);
   let any=false;
   document.querySelectorAll('.log-month').forEach(group=>{
     const body=group.querySelector('.log-body');
-    const items=group.querySelectorAll('.log-item');
+    let items=group.querySelectorAll('.log-item');
+    if(q&&body&&body.dataset.lazy==='1'){
+      const d=logMonthData.get(group.dataset.ym);
+      if(d){
+        body.innerHTML=d.items.map(r=>logRowHtml(r,d.batchIds)).join('');
+        delete body.dataset.lazy;
+        items=group.querySelectorAll('.log-item');
+      }
+    }
     let shown=false;
     items.forEach(el=>{
       const show=!q||el.dataset.search.includes(q);
@@ -884,12 +1126,45 @@ const applyLogFilter=()=>{
       if(shown)any=true;
     }else{
       group.style.display='';
-      if(body)body.style.display=group.dataset.open==='1'?'':'none';
+      if(body){
+        if (body.dataset.lazy === '1') {
+          // 懒渲染的折叠月份：保持折叠状态，不展示
+          body.style.display='none';
+        } else {
+          body.style.display=group.dataset.open==='1'?'':'none';
+        }
+      }
       any=true;
     }
   });
   const empty=$('logEmpty');
   if(empty)empty.style.display=any?'none':'';
+};
+
+const renderUsed=()=>{
+  const list=state.batches.filter(b=>b.status==='used').sort((a,b)=>{
+    const ta=parseDateStr(b.usedDate)?.getTime()||b.createdAt||0;
+    const tb=parseDateStr(a.usedDate)?.getTime()||a.createdAt||0;
+    return ta-tb;
+  });
+  if(!list.length)return `<div class="group-title">使用记录</div><div class="group-card"><div class="empty">还没有用完的记录</div></div>`;
+  const groups={};
+  list.forEach(b=>{const k=(b.usedDate||'').slice(0,7)||'未知';(groups[k]=groups[k]||[]).push(b);});
+  let html=`<div class="group-title">使用记录 <span>${list.length} 条</span></div>`;
+  for(const ym of Object.keys(groups).sort().reverse()){
+    const label=ym==='未知'?'未知月份':`${ym.slice(0,4)}年${ym.slice(5,7)}月`;
+    html+=`<div class="group-title"><span>${label}</span><span>${groups[ym].length} 条</span></div><div class="group-card">`;
+    html+=groups[ym].map(b=>{
+      const m=getMat(b.materialId);
+      const name=m?m.name:'(物料已删除)';
+      const unit=m?m.unit||'':'';
+      const q=roundQty(b.usedQty!=null?b.usedQty:b.qty);
+      const stTxt=b.storage==='frozen'?' · <b style="color:var(--purple)">冷冻分装</b>':b.storage==='cold'?' · <b style="color:var(--purple)">冷藏分装</b>':b.storage==='room'?' · <b style="color:var(--purple)">常温分装</b>':'';
+      return `<div class="brow"><div class="bi"><div class="bt">${esc(name)}　${q}${esc(unit)}${stTxt}</div><div class="bs">用完于 ${esc(b.usedDate||'—')}${b.openDate?' · 开封 '+esc(b.openDate):''}${b.note?' · 📝 '+esc(b.note):''}</div></div></div>`;
+    }).join('');
+    html+='</div>';
+  }
+  return html;
 };
 
 const renderAdvanced=()=>{
@@ -901,7 +1176,7 @@ const renderAdvanced=()=>{
 /* ===== Toast / Sheet 辅助 ===== */
 let toastTimer=null,toastUndo=null,sheetTimer=null;
 const showToast=(msg,undo)=>{
-  const on=undo===true&&undoStack.length>0&&Date.now()-lastUndoAt<2500;
+  const on=undo===true&&undoReady&&((_persistPending&&lastSavedState)||(undoStack.length>0&&Date.now()-lastUndoAt<2500));
   const t=$('toast');
   t.innerHTML=`<span>${esc(msg)}</span>${on?'<button class="tu" data-action="toast-undo">撤销</button>':''}`;
   t.classList.add('show');
@@ -914,6 +1189,7 @@ const openSheet=html=>{
   clearTimeout(sheetTimer);
   const sheet=$('sheet');
   sheet.innerHTML=html;
+  sheet.querySelectorAll('.row[data-action]').forEach(el=>{el.setAttribute('role','button');el.tabIndex=0;});
   sheet.scrollTop=0;
   $('mask').classList.add('show');
   sheet.onclick=e=>{
@@ -921,15 +1197,36 @@ const openSheet=html=>{
     if(document.activeElement&&document.activeElement.tagName==='INPUT')document.activeElement.blur();
   };
 };
-const closeSheet=()=>{$('mask').classList.remove('show');sheetTimer=setTimeout(()=>{if(!$('mask').classList.contains('show'))$('sheet').innerHTML='';},280);};
+const syncExternalState=raw=>{
+  try{
+    state=normalizeState(JSON.parse(raw));
+    lastSavedState=raw;
+    undoStack=[];
+    invalidateMatIndex();
+    render(true);
+    showToast('已同步其他标签页的数据');
+  }catch(e){}
+};
+const closeSheet=()=>{
+  $('mask').classList.remove('show');
+  sheetTimer=setTimeout(()=>{if(!$('mask').classList.contains('show'))$('sheet').innerHTML='';},280);
+  if(pendingStorageSync){const raw=pendingStorageSync;pendingStorageSync=null;syncExternalState(raw);}
+};
 $('mask').addEventListener('click',e=>{if(e.target.id==='mask')closeSheet();});
+window.addEventListener('storage',e=>{
+  if(e.key!==DB_KEY||!e.newValue)return;
+  if($('mask').classList.contains('show')){
+    pendingStorageSync=e.newValue;
+    showToast('其他标签页更新了数据，关闭弹窗后自动刷新');
+  }else syncExternalState(e.newValue);
+});
 const undoLast=()=>{
   const item=undoStack.pop();
   if(!item){showToast('没有可撤销的操作');return false;}
   const backup=state;
   undoRestoring=true;
   state=normalizeState(JSON.parse(item.snapshot));
-  const ok=persist();
+  const ok=persistNow();
   undoRestoring=false;
   if(!ok){state=backup;undoStack.push(item);return false;}
   if(stockView.startsWith('cat:')&&!state.categories.includes(stockView.slice(4)))stockView='';
@@ -949,33 +1246,50 @@ const matDetailSheet=id=>{
   const m=getMat(id);if(!m)return;
   const e=buildMatIndex().get(m.id)||{qty:0,active:[]};const qty=roundQty(e.qty);
   const dueOf=b=>batchDueDate(b,m);
-  const bs=e.active.slice().sort((a,b)=>{
+  const sortFn=(a,b)=>{
     const da=dueOf(a),db=dueOf(b);
     if(da&&db)return da-db;
     if(da)return -1;
     if(db)return 1;
     if(a.status!==b.status)return a.status==='opened'?-1:1;
     return(a.openDate||a.createDate||'9999').localeCompare(b.openDate||b.createDate||'9999');
-  });
-  const rowsHtml=bs.length?bs.map(b=>{
+  };
+  const renderBatchRow=(b,isChild)=>{
     const{due,ruleLabel}=describeBatch(b,m);
-    const isExpired=due&&diffDays(today(),due)<0;
+    const isHourly=(()=>{const r=ruleOfBatch(b,m);return !!r&&r.type==='hours';})();
+    const expired=due?(isHourly?due.getTime()<Date.now():due.getTime()<=Date.now()):false;
+    const msPast=due?Date.now()-due.getTime():0;
     const sn=isSnoozed(b.id)?getSnooze(b.id):null;
     let info,sub;
-    if(b.status==='opened'){info=`${shortDate(b.openDate)||'—'} → ${due?shortDate(toDateStr(due)):'—'}`;sub=b.expireDate?'指定到期':(ruleLabel||'⚠无规则');}
-    else{info=b.expireDate?`指定到期 ${shortDate(b.expireDate)}`:(due?`推算到期 ${shortDate(toDateStr(due))}`:'未开封');sub=b.createDate?`入库 ${shortDate(b.createDate)}`:'';}
+    if(b.status==='opened'){
+      info=`${shortDate(b.openDate)||'—'} → ${due?`${shortDate(toDateStr(due))} ${pad(due.getHours())}:${pad(due.getMinutes())}`:'—'}`;
+      sub=b.expireDate?'指定到期':(ruleLabel||'⚠无规则');
+    }else{
+      info=b.expireDate?`指定到期 ${shortDate(b.expireDate)}`:(due?`推算到期 ${shortDate(toDateStr(due))} ${pad(due.getHours())}:${pad(due.getMinutes())}`:'未开封');
+      sub=b.createDate?`入库 ${shortDate(b.createDate)}`:'';
+    }
     const badge=b.status==='opened'?'<span class="badge g">已开封</span>':'<span class="badge gy">未开封</span>';
-
-    const mainAct=b.qty>1e-6?(b.status==='unopened'?`<button class="btn xs p" data-action="quick-open-batch" data-id="${esc(b.id)}">开封</button>`:`<button class="btn xs gh" data-action="quick-used" data-id="${esc(b.id)}">用完</button>`):'';
+    const textStyle=expired?'color:var(--red);font-weight:600;':'';
+    const expTag=expired?` <span class="badge r">${msPast<86400e3?`过期${fmtDur(msPast)}`:`过期${-diffDays(today(),due)}天`}</span>`:'';
+    const snTag=sn?' <span class="badge gy">已稍后</span>':'';
+    const stTag=b.storage==='frozen'?' <span class="badge p">冷冻分装</span>':b.storage==='cold'?' <span class="badge p">冷藏分装</span>':b.storage==='room'?' <span class="badge p">常温分装</span>':'';
+    const parentHint=(b.parentId&&!isChild)?(()=>{const p=getBatch(b.parentId);return p?`<div class="bs" style="color:var(--purple)">↳ 分装自 ${shortDate(p.openDate)||'—'} 开封批次</div>`:'';})():'';
+    const noteHtml=b.note?`<div class="bs bnote">📝 ${esc(b.note)}</div>`:'';
+    const mainAct=Number(b.qty)>1e-6?(b.status==='unopened'?`<button class="btn xs p" data-action="quick-open-batch" data-id="${esc(b.id)}">开封</button>`:`<button class="btn xs gh" data-action="quick-used" data-id="${esc(b.id)}">用完</button>`):'';
     const plusOneAct=b.status==='opened'?`<button class="btn xs gh" data-action="extend-batch" data-id="${esc(b.id)}">+1天</button>`:'';
     const snoozeAct=sn?`<button class="btn xs gh" data-action="unsnooze" data-id="${esc(b.id)}" title="恢复到期提醒">🔔</button>`:'';
-
-    const textStyle=isExpired?'color:var(--red);font-weight:600;':'';
-    const expTag=isExpired?` <span class="badge r" style="margin-left:4px">过期${-diffDays(today(),due)}天</span>`:'';
-    const snTag=sn?' <span class="badge gy" style="margin-left:4px">已稍后</span>':'';
-
-    return `<div class="brow batch-row"><div class="bi"><div class="bt" style="${textStyle}">${badge}${esc(info)}${expTag}${snTag}</div>${sub?`<div class="bs">${esc(sub)}</div>`:''}</div><span class="bq">${roundQty(b.qty)}${esc(m.unit||'')}</span>${plusOneAct}${mainAct}${snoozeAct}<button class="btn xs gh" data-action="open-edit-batch" data-id="${esc(b.id)}">⋯</button></div>`;
-  }).join(''):(m.disabled?'<div class="empty">暂无批次</div>':`<div class="empty">暂无批次<br><button class="btn p mini" data-action="open-add-batch" data-id="${esc(m.id)}">＋ 添加批次</button></div>`);
+    const splitBtn=(b.status==='opened'&&Number(b.qty)>1e-6&&!b.parentId)?`<button class="btn xs gh" data-action="open-split" data-id="${esc(b.id)}">分装</button>`:'';
+    const thawBtn=(b.storage==='frozen'&&b.status==='opened'&&Number(b.qty)>1e-6)?`<button class="btn xs gh" data-action="thaw-batch" data-id="${esc(b.id)}">解冻</button>`:'';
+    return `<div class="brow batch-row${isChild?' batch-child':''}${b.storage?' storage-'+b.storage:''}"><div class="bi"><div class="bt" style="${textStyle}">${badge}${esc(info)}${expTag}${snTag}${stTag}</div>${sub?`<div class="bs">${esc(sub)}</div>`:''}${parentHint}${noteHtml}</div><span class="bq">${roundQty(b.qty)}${esc(m.unit||'')}</span>${splitBtn}${thawBtn}${plusOneAct}${mainAct}${snoozeAct}<button class="btn xs gh" data-action="open-edit-batch" data-id="${esc(b.id)}">⋯</button></div>`;
+  };
+  const activeIds=new Set(e.active.map(x=>x.id));
+  const topLevel=e.active.filter(x=>!x.parentId||!activeIds.has(x.parentId)).sort(sortFn);
+  const childrenOf=pid=>e.active.filter(x=>x.parentId===pid).sort(sortFn);
+  const rowsHtml=topLevel.length?topLevel.map(x=>{
+    const kids=childrenOf(x.id);
+    return renderBatchRow(x,false)+kids.map(c=>renderBatchRow(c,true)).join('');
+  }).join(''):(m.disabled?'<div class="empty">暂无批次</div>'
+    :`<div class="empty">暂无批次<br><button class="btn p mini" data-action="open-add-batch" data-id="${esc(m.id)}">＋ 添加批次</button></div>`);
 
   let quickActions='';
   if(m.isPrepared&&!m.disabled){
@@ -1037,6 +1351,7 @@ const materialSheet=(id,preName)=>{
   }).join('');
   const rules=state.rules.map(r=>`<option value="${esc(r.id)}" ${m&&m.ruleId===r.id?'selected':''}>${esc(r.name)}（${ruleTxt(r)}）</option>`).join('');
   const ut=m?.unopenedType||'none',uv=m?.unopenedValue||0;
+  const ot=m?.openedType||'none',ov=m?.openedValue||0;
   const isDisabled=!!m?.disabled;
   const defName=esc(m?m.name:(preName||''));
   const defAlias=esc(m?.alias||'');
@@ -1044,7 +1359,20 @@ const materialSheet=(id,preName)=>{
   openSheet(`<h3>${m?'编辑物料':'新增物料'}</h3>
   <label>物料名<input id="m_name" type="text" value="${defName}"></label>
   <label>搜索别名（选填，如输入 tnny 代表泰奶奶油）<input id="m_alias" type="text" value="${defAlias}" placeholder="支持拼音首字母或英文"></label>
-  <label>所属分类（可多选）<div class="cbg">${catsHtml}</div></label><label>开封效期规则<select id="m_rule">${rules}</select></label><label>未开封保质期单位<select id="m_ut"><option value="none" ${ut==='none'?'selected':''}>不设置</option><option value="days" ${ut==='days'?'selected':''}>天</option><option value="months" ${ut==='months'?'selected':''}>月</option></select></label><label>未开封保质期数值<input id="m_uv" type="number" min="0" value="${uv}"></label><label>基准单位<input id="m_unit" type="text" list="unitPresets" value="${m?esc(m.unit||'瓶'):'瓶'}"></label><datalist id="unitPresets">${['瓶','盒','包','袋','罐','块','杯','支'].map(u=>`<option value="${u}"></option>`).join('')}</datalist>
+  <label>所属分类（可多选）<div class="cbg">${catsHtml}</div></label><label>开封效期规则<select id="m_rule">${rules}</select></label>
+  <label>开封后有效期（选填，优先于上面的规则）
+    <div style="display:flex;gap:8px;margin-top:5px">
+      <select id="m_ot" style="flex:1;margin-top:0">
+        <option value="none" ${ot==='none'?'selected':''}>不覆盖（跟随规则）</option>
+        <option value="hours" ${ot==='hours'?'selected':''}>小时</option>
+        <option value="days" ${ot==='days'?'selected':''}>天</option>
+        <option value="months" ${ot==='months'?'selected':''}>月</option>
+      </select>
+      <input id="m_ov" type="number" min="0" style="width:110px;margin-top:0" value="${ov}">
+    </div>
+  </label>
+  <div class="hint">开封后有效期填 0 表示“当天打烊前用完”（D+0）。</div>
+  <label>未开封保质期单位<select id="m_ut"><option value="none" ${ut==='none'?'selected':''}>不设置</option><option value="days" ${ut==='days'?'selected':''}>天</option><option value="months" ${ut==='months'?'selected':''}>月</option></select></label><label>未开封保质期数值<input id="m_uv" type="number" min="0" value="${uv}"></label><label>基准单位<input id="m_unit" type="text" list="unitPresets" value="${m?esc(m.unit||'瓶'):'瓶'}"></label><datalist id="unitPresets">${['瓶','盒','包','袋','罐','块','杯','支'].map(u=>`<option value="${u}"></option>`).join('')}</datalist>
   
   <label class="chk-row">
     <input type="checkbox" id="m_is_prepared" ${m&&m.isPrepared?'checked':''}> 
@@ -1073,7 +1401,7 @@ const catSheet=idx=>{
 
 const ruleSheet=id=>{
   const r=id?getRule(id):null;
-  openSheet(`<h3>${r?'编辑规则':'新增规则'}</h3><label>规则名<input id="r_name" type="text" value="${r?esc(r.name):''}"></label><label>类型<select id="r_type"><option value="days" ${r&&r.type==='days'?'selected':''}>按天数（D+n）</option><option value="months" ${r&&r.type==='months'?'selected':''}>按月</option></select></label><label>数值<input id="r_val" type="number" min="0" value="${r?r.value:6}"></label>${sheetFooter('save-rule',id||'')}`);
+  openSheet(`<h3>${r?'编辑规则':'新增规则'}</h3><label>规则名<input id="r_name" type="text" value="${r?esc(r.name):''}"></label><label>类型<select id="r_type"><option value="days" ${r&&r.type==='days'?'selected':''}>按天数（D+n）</option><option value="months" ${r&&r.type==='months'?'selected':''}>按月</option><option value="hours" ${r&&r.type==='hours'?'selected':''}>按小时</option></select></label><label>数值<input id="r_val" type="number" min="0" value="${r?r.value:6}"></label><div class="hint">天/月规则到期时刻为当天打烊时间；小时规则从开封时刻起算。</div>${sheetFooter('save-rule',id||'')}`);
 };
 
 const calDaySheet=ds=>{
@@ -1104,7 +1432,7 @@ const snoozeSheet=batchId=>{
   const m=getMat(b.materialId);if(!m)return;
   const sn=getSnooze(batchId);
   openSheet(`<h3>稍后处理「${esc(m.name)}」</h3>
-  <div class="hint" style="margin-bottom:12px">当前提醒不会消失，只是暂时不在首页出现${sn?'（已设置稍后）':''}。</div>
+  <div class="hint" style="margin-bottom:12px">当前提醒不会消失，只是暂时不在首页出现；到指定日期的 0 点后自动恢复提醒。</div>
   <div class="snooze-grid">
     <button class="btn gh" data-action="do-snooze" data-id="${esc(b.id)}" data-days="1">明天</button>
     <button class="btn gh" data-action="do-snooze" data-id="${esc(b.id)}" data-days="3">3 天后</button>
@@ -1162,8 +1490,10 @@ const restoreSnapshot=snapId=>{
   if(!confirm(`恢复到「${snap.label}」的快照？当前数据会先自动保存一份。`))return;
   addSnapshot('恢复前快照');
   const backup=state;
+  const oldLosses=state.losses;
   currentActionLabel='恢复本地快照';
   state=normalizeState(JSON.parse(JSON.stringify(snap.state)));
+  if(!Array.isArray(state.losses)||state.losses.length===0){state.losses=oldLosses;}
   if(!persist()){state=backup;return;}
   currentTab='home';
   closeSheet();resetUI();render(false);
@@ -1191,6 +1521,66 @@ const quickMakeSheet=(matId)=>{
   </div>
   <label>自定义数量<input id="qm_qty" type="number" inputmode="decimal" step="0.1" min="0.1" value="${defaultQty}"></label>
   <div class="rbtn"><button class="btn gh" data-action="close-sheet">取消</button><button class="btn p" data-action="do-quick-make" data-id="${esc(matId)}" data-qty="-1">确认制作</button></div>`);
+};
+
+const splitSheet=batchId=>{
+  const b=getBatch(batchId);if(!b)return;
+  if(b.status!=='opened'){showToast('只有已开封批次可以分装');return;}
+  if(b.parentId){showToast('分装批次不能再分装');return;}
+  const m=getMat(b.materialId);if(!m)return;
+  const avail=roundQty(b.qty);if(!(avail>0)){showToast('该批次没有可用数量');return;}
+  const coldDue=batchDueDate(b,m);
+  const coldVal=coldDue?toDateStr(coldDue):toDateStr(closeOfToday());
+  openSheet(`<h3>分装「${esc(m.name)}」</h3>
+  <div class="hint" style="margin-bottom:12px">母批次剩余 ${avail}${esc(m.unit||'')}。分装后生成独立批次，各自计算效期，互不影响。</div>
+  <label>分装数量（${esc(m.unit||'')}）<input id="sp_qty" type="number" inputmode="decimal" step="0.1" min="0.1" max="${avail}" value="${avail}"></label>
+  <label>保存方式<select id="sp_storage">
+    <option value="frozen">冷冻（延长保存）</option>
+    <option value="cold">冷藏</option>
+    <option value="room">常温</option>
+  </select></label>
+  <label>到期日
+    <div style="display:flex;gap:6px;margin-top:5px;flex-wrap:wrap">
+      <button class="btn xs gh" data-action="sp-preset" data-days="30">30天</button>
+      <button class="btn xs gh" data-action="sp-preset" data-days="60">60天</button>
+      <button class="btn xs gh" data-action="sp-preset" data-days="90">90天</button>
+      <button class="btn xs gh" data-action="sp-preset" data-days="0">跟随母批次</button>
+    </div>
+    <input id="sp_exp" type="date" value="${coldVal}" data-parent-due="${coldVal}" style="margin-top:8px">
+  </label>
+  <label>备注（选填，如密封袋编号/份数）<input id="sp_note" type="text" placeholder="如：密封袋A · 4份冷冻"></label>
+  <div class="rbtn"><button class="btn gh" data-action="close-sheet">取消</button><button class="btn p" data-action="do-split" data-id="${esc(b.id)}">确认分装</button></div>`);
+};
+
+const doSplit=batchId=>{
+  const b=getBatch(batchId);if(!b)return;
+  if(b.status!=='opened'){showToast('该批次不是已开封状态');return;}
+  if(b.parentId){showToast('分装批次不能再分装');return;}
+  const m=getMat(b.materialId);if(!m)return;
+  const avail=Number(b.qty)||0;
+  let qty=roundQty(gv('sp_qty'));
+  if(!(qty>0)){showToast('分装数量需大于 0');return;}
+  if(qty>avail)qty=avail;
+  const storage=gv('sp_storage')||'cold';
+  const exp=normDate(gv('sp_exp'));
+  const note=gv('sp_note').trim();
+  if(!exp){showToast('请填写到期日');return;}
+
+  b.qty=roundQty(avail-qty);
+  if(b.qty<=1e-6){b.usedQty=roundQty(qty);b.qty=0;b.status='used';b.usedDate=todayStr();}
+
+  const storageTxt=storage==='frozen'?'冷冻分装':storage==='cold'?'冷藏分装':'常温分装';
+  state.batches.push({
+    id:uid('b'),materialId:b.materialId,qty,
+    status:'opened',openDate:todayStr(),openAt:Date.now(),
+    expireDate:exp,createDate:todayStr(),createdAt:Date.now(),
+    parentId:b.id,storage,splitFrom:roundQty(avail),
+    note:note||storageTxt
+  });
+  if(!persist())return;
+  render(true);matDetailSheet(b.materialId);
+  vib(15);
+  showToast(`已分装 ${qty}${m.unit||''}（${storageTxt}）`,true);
 };
 
 const openStocktake=()=>{
@@ -1236,7 +1626,13 @@ const openStocktake=()=>{
 /* ===== 业务操作 ===== */
 const undoLossById=lossId=>{
   const rec=state.losses.find(x=>x.id===lossId);if(!rec)return false;
-  if(!rec.batchId){showToast('盘点生成的账目不支持撤销');return false;}
+  if(!rec.batchId){
+    if(!confirm('该记录由盘点生成，撤销只会删除这条报损记录，不会回补库存。是否继续？'))return false;
+    state.losses=state.losses.filter(x=>x.id!==lossId);
+    persist();
+    showToast('已删除盘点报损记录');
+    return true;
+  }
   const b=getBatch(rec.batchId);
   if(!b){showToast('批次已被清理，无法撤销');return false;}
   const full=rec.fullLoss!==false;
@@ -1270,6 +1666,7 @@ const doLoss=(batchId,qty,note,reasons)=>{
 const quickUsed=batchId=>{
   const b=getBatch(batchId);if(!b)return;
   const m=getMat(b.materialId);
+  b.usedQty=roundQty(b.qty);
   b.qty=0;b.status='used';b.usedDate=todayStr();if(!persist())return;render(true);matDetailSheet(b.materialId);
   vib(15);
   showToast(m?`已用完「${m.name}」`:'已用完',true);
@@ -1277,12 +1674,12 @@ const quickUsed=batchId=>{
 const doQuickOpen=(batchId,qty)=>{
   const b=getBatch(batchId);if(!b||b.status!=='unopened')return;
   const m=getMat(b.materialId);if(!m)return;
-  if(!getRule(m.ruleId)){showToast('该物料未设置开封效期规则，请先编辑物料');return;}
+  if(!hasOpenedRule(m)){showToast('该物料未设置开封效期规则，请先编辑物料');return;}
   let dec=qty!=null?Number(qty):Number(gv('qo_qty'));if(!(dec>0))dec=1;dec=Math.min(dec,Number(b.qty)||0);dec=roundQty(dec);
   if(!(dec>0)){showToast('数量需大于 0');return;}
   b.qty=roundQty((Number(b.qty)||0)-dec);
-  if(b.qty<=1e-6){b.qty=0;b.status='used';b.usedDate=todayStr();}
-  const nb={id:uid('b'),materialId:b.materialId,qty:dec,status:'opened',openDate:todayStr(),expireDate:'',note:b.note?b.note+' · 拆分开封':'批次开封',createDate:todayStr(),createdAt:Date.now()};
+  if(b.qty<=1e-6){b.usedQty=dec;b.qty=0;b.status='used';b.usedDate=todayStr();}
+  const nb={id:uid('b'),materialId:b.materialId,qty:dec,status:'opened',openDate:todayStr(),openAt:Date.now(),expireDate:'',note:b.note?b.note+' · 拆分开封':'批次开封',createDate:todayStr(),createdAt:Date.now()};
   state.batches.push(nb);
   if(!persist())return;render(true);matDetailSheet(b.materialId);
   vib(15);
@@ -1290,7 +1687,7 @@ const doQuickOpen=(batchId,qty)=>{
 };
 const doQuickMake=(matId,qty)=>{
   const m=getMat(matId); if(!m)return;
-  if(!getRule(m.ruleId)){showToast('该物料未设置开封效期规则，请先编辑物料');return;}
+  if(!hasOpenedRule(m)){showToast('该物料未设置开封效期规则，请先编辑物料');return;}
   let finalQty = Number(qty);
   if(finalQty === -1){
     finalQty = Number(gv('qm_qty'));
@@ -1303,7 +1700,7 @@ const doQuickMake=(matId,qty)=>{
   if (lastMake.id === matId && now - lastMake.time < 1000) { showToast('操作太快啦，请勿重复点击'); return; }
   lastMake = { id: matId, time: now };
   
-  const nb={id:uid('b'),materialId:m.id,qty:finalQty,status:'opened',openDate:todayStr(),expireDate:'',createDate:todayStr(),note:'快捷制作',createdAt:now};
+  const nb={id:uid('b'),materialId:m.id,qty:finalQty,status:'opened',openDate:todayStr(),openAt:now,expireDate:'',createDate:todayStr(),note:'快捷制作',createdAt:now};
   state.batches.push(nb);
   if(!persist())return; 
   render(true); 
@@ -1362,7 +1759,7 @@ const doStocktake=()=>{
 const download=(filename,content,type)=>{const blob=new Blob([content],{type:type||'text/plain;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(()=>URL.revokeObjectURL(url),1000);};
 const csvCell=s=>`"${String(s==null?'':s).replace(/"/g,'""')}"`;
 const downloadCSV=(name,headers,rows)=>{if(!rows.length){showToast('暂无数据');return;}const csv='\ufeff'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\r\n');download(`${name}_${todayStr()}.csv`,csv,'text/csv;charset=utf-8');};
-const exportJSON=()=>download(`超级小兔2.1备份_${todayStr()}.json`,JSON.stringify(state,null,2),'application/json');
+const exportJSON=()=>download(`超级小兔2.2备份_${todayStr()}.json`,JSON.stringify(state,null,2),'application/json');
 
 const exportLossCSV=()=>{
   let list=state.losses.slice().sort((a,b)=>lossTime(b)-lossTime(a));
@@ -1439,7 +1836,7 @@ const handleFileSelect=e=>{
       const backup=state;
       currentActionLabel='导入数据';
       state=normalizeState(obj);loadOK=true;
-      if(!persist()){state=backup;return;}
+      if(!persistNow()){state=backup;return;}
       currentTab='home';
       closeSheet();resetUI();render(false);
       showToast('导入成功',true);
@@ -1451,79 +1848,140 @@ const handleFileSelect=e=>{
 $('importFile').addEventListener('change',handleFileSelect);
 
 /* ===== 事件委托 ===== */
-document.addEventListener('click',e=>{
-  const tabBtn=e.target.closest('.tb button');
-  if(tabBtn){
-    const nt=tabBtn.dataset.tab;
-    if(nt !== currentTab){ stockQuery=''; stockView=''; stockSort='default'; logQuery=''; calOffset=0; }
-    currentTab=nt; subView=''; render(false); return;
-  }
-  const el=e.target.closest('[data-action]');if(!el)return;
-  lastUndoAt=0;
-  const a=el.dataset.action,id=el.dataset.id;
-  if(UNDO_LABELS[a])currentActionLabel=UNDO_LABELS[a];
-  switch(a){
-    case 'close-sheet':closeSheet();break;
-    case 'go-back':subView='';render(false);break;
-    case 'open-sub':subView=el.dataset.sub;if(subView==='log'){logInited=false;logQuery='';}render(false);break;
-    case 'toggle-soon':soonOpen=!soonOpen;render(true);break;
-    case 'toggle-sort':{
+const ACTIONS={};
+const reg=(name,fn)=>{ACTIONS[name]=fn;};
+const act_close_sheet=(el,id)=>{
+closeSheet();return;
+};
+const act_go_back=(el,id)=>{
+subView='';render(false);return;
+};
+const act_open_sub=(el,id)=>{
+subView=el.dataset.sub;if(subView==='log'){logInited=false;logQuery='';}render(false);return;
+};
+const act_clear_stock_search=(el,id)=>{
+{const i=$('stockSearch');if(i){i.value='';stockQuery='';applyStockFilter();i.focus();}return;}
+};
+const act_clear_log_search=(el,id)=>{
+{const i=$('logSearch');if(i){i.value='';logQuery='';applyLogFilter();i.focus();}return;}
+};
+const act_toggle_soon=(el,id)=>{
+soonOpen=!soonOpen;render(true);return;
+};
+const act_toggle_sort=(el,id)=>{
+{
       stockSort = stockSort==='default'?'expiry':(stockSort==='expiry'?'qty':'default');
       render(true);
       showToast(stockSort==='default'?'智能排序':(stockSort==='expiry'?'已按到期时间排序':'已按库存数量排序'));
-      break;
+      return;
     }
-    case 'jump-today':{const t=$('secToday');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});break;}
-    case 'jump-soon':{if(!soonOpen){soonOpen=true;render(true);}setTimeout(()=>{const t=$('secSoon');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},60);break;}
-    case 'toggle-log-month':{const ym=el.dataset.ym;if(logOpen.has(ym))logOpen.delete(ym);else logOpen.add(ym);render(true);break;}
-    case 'set-view':stockView=el.dataset.view||'';if(stockView!=='calendar')calOffset=0;render(false);break;
-    case 'toast-undo':{if(!toastUndo)return;clearTimeout(toastTimer);$('toast').classList.remove('show');toastUndo=null;undoLast();break;}
-    case 'undo-last':undoLast();break;
-    case 'set-theme':{
+};
+const act_jump_today=(el,id)=>{
+{const t=$('secToday');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});return;}
+};
+const act_jump_soon=(el,id)=>{
+{if(!soonOpen){soonOpen=true;render(true);}setTimeout(()=>{const t=$('secSoon');if(t)t.scrollIntoView({behavior:'smooth',block:'start'});},60);return;}
+};
+const act_toggle_log_month=(el,id)=>{
+{const ym=el.dataset.ym;if(logOpen.has(ym))logOpen.delete(ym);else logOpen.add(ym);render(true);return;}
+};
+const act_set_view=(el,id)=>{
+stockView=el.dataset.view||'';if(stockView!=='calendar')calOffset=0;render(false);return;
+};
+const act_toast_undo=(el,id)=>{
+{if(!toastUndo)return;clearTimeout(toastTimer);$('toast').classList.remove('show');toastUndo=null;undoLast();return;}
+};
+const act_undo_last=(el,id)=>{
+undoLast();return;
+};
+const act_set_theme=(el,id)=>{
+{
       const th=el.dataset.theme==='blue'?'blue':'paper';
       applyTheme(th,true);render(true);
       showToast(th==='blue'?'已切换：晴空白蓝':'已切换：暖纸');
-      break;
+      return;
     }
-    case 'snapshot-manager':snapshotSheet();break;
-    case 'create-snapshot':{
+};
+const act_snapshot_manager=(el,id)=>{
+snapshotSheet();return;
+};
+const act_create_snapshot=(el,id)=>{
+{
       if(!addSnapshot('手动快照',true)){showToast('快照保存失败，本地空间可能不足');return;}
       snapshotSheet();
       showToast('已保存本地快照');
-      break;
+      return;
     }
-    case 'restore-snapshot':restoreSnapshot(id);break;
-    case 'refresh-health':render(true);break;
-    case 'open-mat-detail':matDetailSheet(id);break;
-    case 'toggle-pin':{
+};
+const act_restore_snapshot=(el,id)=>{
+restoreSnapshot(id);return;
+};
+const act_refresh_health=(el,id)=>{
+render(true);return;
+};
+const act_open_mat_detail=(el,id)=>{
+matDetailSheet(id);return;
+};
+const act_toggle_pin=(el,id)=>{
+{
       const m=getMat(id);if(!m)return;
       m.pinned=!m.pinned;
       if(!persist())return;
       render(true);
       showToast(m.pinned?`已置顶「${m.name}」`:`已取消置顶「${m.name}」`,true);
-      break;
+      return;
     }
-    case 'open-add-batch':batchSheet(null,id);break;
-    case 'open-edit-batch':batchSheet(id);break;
-    case 'open-add-material':materialSheet('', el.dataset.name||'');break;
-    case 'open-edit-material':materialSheet(id);break;
-    case 'add-cat':catSheet(null);break;
-    case 'edit-cat':catSheet(Number(el.dataset.idx));break;
-    case 'add-rule':ruleSheet('');break;
-    case 'edit-rule':ruleSheet(id);break;
-    case 'batch-manage-cat':batchManageCatSheet(el.dataset.cat);break;
-    case 'open-stocktake':openStocktake();break;
-    case 'snooze':snoozeSheet(id);break;
-    case 'card-open-first':doQuickOpen(id,1);break;
-    case 'card-loss-earliest':lossSheet(id);break;
-    case 'loss':{
+};
+const act_open_add_batch=(el,id)=>{
+batchSheet(null,id);return;
+};
+const act_open_edit_batch=(el,id)=>{
+batchSheet(id);return;
+};
+const act_open_add_material=(el,id)=>{
+materialSheet('', el.dataset.name||'');return;
+};
+const act_open_edit_material=(el,id)=>{
+materialSheet(id);return;
+};
+const act_add_cat=(el,id)=>{
+catSheet(null);return;
+};
+const act_edit_cat=(el,id)=>{
+catSheet(Number(el.dataset.idx));return;
+};
+const act_add_rule=(el,id)=>{
+ruleSheet('');return;
+};
+const act_edit_rule=(el,id)=>{
+ruleSheet(id);return;
+};
+const act_batch_manage_cat=(el,id)=>{
+batchManageCatSheet(el.dataset.cat);return;
+};
+const act_open_stocktake=(el,id)=>{
+openStocktake();return;
+};
+const act_snooze=(el,id)=>{
+snoozeSheet(id);return;
+};
+const act_card_open_first=(el,id)=>{
+doQuickOpen(id,1);return;
+};
+const act_card_loss_earliest=(el,id)=>{
+lossSheet(id);return;
+};
+const act_loss=(el,id)=>{
+{
       const b=getBatch(id);
       if(!b)return;
       if(Number(b.qty)<=1.01)doLoss(id,Number(b.qty),'一键极速报损',['过期']);
       else lossSheet(id);
-      break;
+      return;
     }
-    case 'loss-all':{
+};
+const act_loss_all=(el,id)=>{
+{
       const [todays]=getExpiryLists();
       if(!todays.length){showToast('没有需要报损的批次');return;}
       if(!confirm(`确认将今日需要报损的 ${todays.length} 个批次全部标记为已报损吗？`))return;
@@ -1535,14 +1993,54 @@ document.addEventListener('click',e=>{
       render(true);
       vib(25);
       showToast(`已一键报损 ${todays.length} 个批次`,true);
-      break;
+      return;
     }
-    case 'undo-loss':{const rec=state.losses.find(x=>x.id===id);if(!rec)return;currentActionLabel='撤销报损';if(undoLossById(id)){render(true);showToast(`已撤销「${rec.materialName}」报损`);}break;}
-    case 'quick-open-batch':quickOpenSheet(id);break;
-    case 'do-quick-open':doQuickOpen(id);break;
-    case 'quick-used':quickUsed(id);break;
-    case 'save-stocktake':doStocktake();break;
-    case 'do-snooze':{
+};
+const act_undo_loss=(el,id)=>{
+{const rec=state.losses.find(x=>x.id===id);if(!rec)return;currentActionLabel='撤销报损';if(undoLossById(id)){render(true);showToast(`已撤销「${rec.materialName}」报损`);}return;}
+};
+const act_quick_open_batch=(el,id)=>{
+quickOpenSheet(id);return;
+};
+const act_do_quick_open=(el,id)=>{
+doQuickOpen(id);return;
+};
+const act_quick_used=(el,id)=>{
+quickUsed(id);return;
+};
+const act_open_split=(el,id)=>{
+splitSheet(id);return;
+};
+const act_do_split=(el,id)=>{
+doSplit(id);return;
+};
+const act_sp_preset=(el,id)=>{
+{
+      const days=Number(el.dataset.days);
+      const inp=$('sp_exp');if(!inp)return;
+      inp.value=days===0?(inp.dataset.parentDue||toDateStr(closeOfToday())):toDateStr(closeOf(addDays(today(),days)));
+      return;
+    }
+};
+const act_thaw_batch=(el,id)=>{
+{
+      const b=getBatch(id);
+      if(!b||b.storage!=='frozen')return;
+      if(!confirm('解冻后请尽快使用（建议 24 小时内），确认解冻？'))return;
+      b.storage='cold';
+      b.note=(b.note||'')+' · 已解冻';
+      b.expireDate=toDateStr(addHours(new Date(),24));
+      if(!persist())return;
+      render(true);matDetailSheet(b.materialId);
+      showToast('已标记解冻，24 小时内用完',true);
+      return;
+    }
+};
+const act_save_stocktake=(el,id)=>{
+doStocktake();return;
+};
+const act_do_snooze=(el,id)=>{
+{
       const b=getBatch(id);if(!b)return;
       const days=Number(el.dataset.days)||1,forever=days>=9999;
       const until=forever?'':toDateStr(addDays(today(),days));
@@ -1552,19 +2050,25 @@ document.addEventListener('click',e=>{
       closeSheet();render(true);
       vib(10);
       showToast(forever?'已不再提醒该批次':`已推迟到 ${shortDate(until)}`,true);
-      break;
+      return;
     }
-    case 'unsnooze':{
+};
+const act_unsnooze=(el,id)=>{
+{
       if(!getSnooze(id))return;
       clearSnooze(id);
       if(!persist())return;
       closeSheet();render(true);
       vib(10);
       showToast('已恢复到期提醒',true);
-      break;
+      return;
     }
-    case 'toggle-loss-reason':el.classList.toggle('on');vib(10);break;
-    case 'count-step':{
+};
+const act_toggle_loss_reason=(el,id)=>{
+el.classList.toggle('on');vib(10);return;
+};
+const act_count_step=(el,id)=>{
+{
       const inp=el.closest('.count-row')?.querySelector('input');
       const step=Number(el.dataset.step)||0;
       if(inp){
@@ -1573,14 +2077,18 @@ document.addEventListener('click',e=>{
         inp.classList.toggle('diff',v!==Number(inp.dataset.orig));
         vib(10);
       }
-      break;
+      return;
     }
-    case 'do-loss':{
+};
+const act_do_loss=(el,id)=>{
+{
       const reasons=Array.from(document.querySelectorAll('#lossReasons .tag-btn.on')).map(x=>x.dataset.reason);
       doLoss(id,Number(gv('loss_qty')),gv('loss_note').trim(),reasons);
-      break;
+      return;
     }
-    case 'extend-batch':{
+};
+const act_extend_batch=(el,id)=>{
+{
       const b=getBatch(id);if(!b)return;
       const m=getMat(b.materialId);
       const due=batchDueDate(b,m)||today();
@@ -1589,26 +2097,32 @@ document.addEventListener('click',e=>{
       render(true);matDetailSheet(b.materialId);
       vib(10);
       showToast(`已顺延至 ${shortDate(b.expireDate)}`,true);
-      break;
+      return;
     }
-    case 'save-batch-cat':{
+};
+const act_save_batch_cat=(el,id)=>{
+{
       const cat=el.dataset.id,checkedIds=Array.from(document.querySelectorAll('input[name="cat_mats"]:checked')).map(cb=>cb.value);
       state.materials.forEach(m=>{const hasCat=m.categories.includes(cat),shouldHave=checkedIds.includes(m.id);
         if(shouldHave&&!hasCat)m.categories.push(cat);
         if(!shouldHave&&hasCat){m.categories=m.categories.filter(c=>c!==cat);if(m.categories.length===0){m.categories.push(UNCAT);if(!state.categories.includes(UNCAT))state.categories.push(UNCAT);}}
       });
-      if(saveAndClose())showToast('分类物料已更新',true);break;
+      if(saveAndClose())showToast('分类物料已更新',true);return;
     }
-    /* 制作 */
-    case 'quick-make-sheet':quickMakeSheet(id);break;
-    case 'do-quick-make':doQuickMake(id, el.dataset.qty);break;
-    /* 清理 */
-    case 'quick-clean':{
+};
+const act_quick_make_sheet=(el,id)=>{
+quickMakeSheet(id);return;
+};
+const act_do_quick_make=(el,id)=>{
+doQuickMake(id, el.dataset.qty);return;
+};
+const act_quick_clean=(el,id)=>{
+{
       const m=getMat(id);if(!m)return;
-      const t=today();let cleared=0;
+      let cleared=0;
       state.batches.filter(b=>b.materialId===id&&(b.status==='opened'||b.status==='unopened')&&Number(b.qty)>1e-6).forEach(b=>{
         const due=batchDueDate(b,m);
-        if(!due||diffDays(t,due)>0)return;
+        if(!due||due.getTime()>Date.now())return;
         const rTxt=b.status==='unopened'
           ?(m.unopenedType==='months'?`未开封+${m.unopenedValue}月`:(m.unopenedType==='days'?`未开封+${m.unopenedValue}天`:'未开封到期'))
           :ruleTxt(ruleOfBatch(b,m));
@@ -1620,12 +2134,14 @@ document.addEventListener('click',e=>{
       render(true);matDetailSheet(m.id);
       vib(20);
       showToast(`已清理 ${cleared} 个过期批次`,true);
-      break;
+      return;
     }
-    case 'save-batch':{
+};
+const act_save_batch=(el,id)=>{
+{
       const isNew=!id;
       const b=isNew?{id:uid('b'),createdAt:Date.now()}:getBatch(id);
-      if(!b){showToast('批次已不存在，请刷新');closeSheet();break;}
+      if(!b){showToast('批次已不存在，请刷新');closeSheet();return;}
       const oldStatus=b.status||'';
       const f=readBatchForm();
       if(gv('f_qty').trim()===''){alert('请填写数量');return;}
@@ -1633,7 +2149,7 @@ document.addEventListener('click',e=>{
       if(f.status==='unopened'&&!f.openStr)f.openStr=todayStr();
 
       const m=getMat(f.matId);
-      const hasRule=m&&getRule(m.ruleId);
+      const hasRule=m&&hasOpenedRule(m);
       if(f.status==='opened'&&!hasRule&&!f.exp){
         alert('该物料未设置开封效期规则，请先填写“指定到期日”，或去高级设置中添加规则！');
         return;
@@ -1649,6 +2165,10 @@ document.addEventListener('click',e=>{
 
       if(f.status==='opened'){
         if(!b.createDate)b.createDate=f.openStr||todayStr();
+        if(b.openDate!==f.openStr||!b.openAt){
+          const ts=(f.openStr===todayStr())?Date.now():(parseDateStr(f.openStr)?.getTime()||Date.now());
+          b.openAt=ts;
+        }
         b.openDate=f.openStr;delete b.usedDate;delete b.lossDate;
       }else if(f.status==='unopened'){
         b.createDate=f.openStr||todayStr();b.openDate='';delete b.usedDate;delete b.lossDate;
@@ -1661,6 +2181,10 @@ document.addEventListener('click',e=>{
       if(f.status==='lost'&&oldStatus!=='lost'&&b.qty>0&&m)pushLoss(b,m,b.qty,b.note||'');
 
       b.status=f.status;
+      if(b.status==='used'||b.status==='lost'){
+        if(b.usedQty==null)b.usedQty=b.qty;
+        b.qty=0;
+      }
       if(b.qty<=0&&(b.status==='opened'||b.status==='unopened')){
         b.status='used';b.usedDate=todayStr();
       }
@@ -1668,19 +2192,27 @@ document.addEventListener('click',e=>{
       if(!saveAndClose())return;
       matDetailSheet(b.materialId);
       showToast('批次已保存',true);
-      break;
+      return;
     }
-    case 'delete-batch':{
+};
+const act_delete_batch=(el,id)=>{
+{
       if(!confirm('确认删除该批次？其关联的报损记录也会一并删除。'))return;
+      const allKids=state.batches.filter(x=>x.parentId===id);
+      const kids=allKids.filter(x=>(x.status==='opened'||x.status==='unopened')&&Number(x.qty)>0);
+      if(kids.length&&!confirm(`该批次有 ${kids.length} 个分装批次，删除母批次后分装将变为独立批次，是否继续？`))return;
+      allKids.forEach(c=>{delete c.parentId;});
       state.batches=state.batches.filter(x=>x.id!==id);
       removeLossesOfBatch(id);
       clearSnooze(id);
       if(!saveAndClose())return;
       showToast('批次已删除',true);
-      break;
+      return;
     }
-    case 'save-material':{
-      const name=gv('m_name').trim(), alias=gv('m_alias').trim(), ruleId=gv('m_rule'),unit=gv('m_unit').trim()||'瓶',ut=gv('m_ut'),uv=clamp(gv('m_uv'),0,999,0);
+};
+const act_save_material=(el,id)=>{
+{
+      const name=gv('m_name').trim(), alias=gv('m_alias').trim(), ruleId=gv('m_rule'),unit=gv('m_unit').trim()||'瓶',ut=gv('m_ut'),uv=clamp(gv('m_uv'),0,999,0),ot=gv('m_ot'),ov=clamp(gv('m_ov'),0,999,0);
       const disabled=$('m_disabled')?$('m_disabled').checked:false;
       const isPrepared=$('m_is_prepared')?$('m_is_prepared').checked:false; 
       const cats=Array.from(document.querySelectorAll('input[name="m_cats"]:checked')).map(cb=>cb.value);
@@ -1689,17 +2221,21 @@ document.addEventListener('click',e=>{
       if(!cats.length){alert('请至少选择一个分类');return;}
       if(id){
         const m=getMat(id);
-        if(m)Object.assign(m,{name,alias,categories:cats,ruleId,unit,unopenedType:ut,unopenedValue:uv,disabled,isPrepared}); 
+        if(m)Object.assign(m,{name,alias,categories:cats,ruleId,unit,unopenedType:ut,unopenedValue:uv,openedType:ot,openedValue:ov,disabled,isPrepared}); 
         else {showToast('物料已不存在，可能已被删除');closeSheet();return;}
       }else{
-        state.materials.push({id:uid('m'),name,alias,categories:cats,ruleId,unit,unopenedType:ut,unopenedValue:uv,disabled,isPrepared,pinned:false}); 
+        state.materials.push({id:uid('m'),name,alias,categories:cats,ruleId,unit,unopenedType:ut,unopenedValue:uv,openedType:ot,openedValue:ov,disabled,isPrepared,pinned:false}); 
       }
       if(!saveAndClose())return;
       showToast('物料已保存',true);
-      break;
+      return;
     }
-    case 'delete-material':deleteMaterialSheet(id);break;
-    case 'do-delete-material':{
+};
+const act_delete_material=(el,id)=>{
+deleteMaterialSheet(id);return;
+};
+const act_do_delete_material=(el,id)=>{
+{
       const m=getMat(id);if(!m)return;
       if(gv('delMatConfirm').trim()!==m.name){alert('物料名不一致，未删除');return;}
       if(state.batches.some(b=>b.materialId===id&&(b.status==='opened'||b.status==='unopened')&&Number(b.qty)>0)){alert('无法删除：该物料下还有库存批次。');return;}
@@ -1712,15 +2248,17 @@ document.addEventListener('click',e=>{
       if(!persist())return;
       closeSheet();render(true);
       showToast(`已删除「${m.name}」`,true);
-      break;
+      return;
     }
-    case 'save-cat':{
+};
+const act_save_cat=(el,id)=>{
+{
       const newName=gv('c_name').trim();if(!newName){alert('不能为空');return;}
       const idxStr=el.dataset.id??'',isNew=idxStr==='';
       if(isNew){if(state.categories.includes(newName)){alert('分类已存在');return;}state.categories.push(newName);}
       else{
         const idx=Number(idxStr),oldName=state.categories[idx];
-        if(oldName===undefined){showToast('分类已不存在');closeSheet();break;}
+        if(oldName===undefined){showToast('分类已不存在');closeSheet();return;}
         if(newName!==oldName){
           if(state.categories.includes(newName)){alert('分类已存在');return;}
           state.categories[idx]=newName;
@@ -1730,27 +2268,33 @@ document.addEventListener('click',e=>{
       }
       if(!saveAndClose())return;
       showToast('分类已保存',true);
-      break;
+      return;
     }
-    case 'del-cat':{
+};
+const act_del_cat=(el,id)=>{
+{
       const idx=Number(el.dataset.idx),oldName=state.categories[idx];
-      if(oldName===undefined){showToast('分类已不存在');closeSheet();break;}
+      if(oldName===undefined){showToast('分类已不存在');closeSheet();return;}
       if(state.materials.some(m=>m.categories.includes(oldName))){alert(`无法删除：还有物料属于「${oldName}」`);return;}
       if(!confirm(`确认删除分类「${oldName}」？`))return;
       state.categories.splice(idx,1);if(stockView==='cat:'+oldName)stockView='';
       if(!saveAndClose())return;
       showToast('分类已删除',true);
-      break;
+      return;
     }
-    case 'save-rule':{
+};
+const act_save_rule=(el,id)=>{
+{
       const name=gv('r_name').trim(),type=gv('r_type'),value=clamp(gv('r_val'),0,999,0);
       if(!name){alert('请填写规则名');return;}
       if(id){const r=getRule(id);if(r)Object.assign(r,{name,type,value});}else state.rules.push({id:uid('r'),name,type,value});
       if(!saveAndClose())return;
       showToast('规则已保存',true);
-      break;
+      return;
     }
-    case 'del-rule':{
+};
+const act_del_rule=(el,id)=>{
+{
       const r=getRule(id);if(!r)return;
       const used=state.materials.filter(m=>m.ruleId===id);
       if(used.length){alert(`无法删除：${used.length} 个物料正在使用该规则（如「${used[0].name}」）。`);return;}
@@ -1758,24 +2302,46 @@ document.addEventListener('click',e=>{
       state.rules=state.rules.filter(x=>x.id!==id);
       if(!saveAndClose())return;
       showToast('规则已删除',true);
-      break;
+      return;
     }
-    case 'save-settings':{
+};
+const act_save_settings=(el,id)=>{
+{
       state.settings.soonDays=Math.round(clamp(gv('setSoon'),1,30,DEFAULT_SETTINGS.soonDays));
       state.settings.lowStock=clamp(gv('setLow'),0,1000,DEFAULT_SETTINGS.lowStock);
+      state.settings.closeHour=Math.round(clamp(gv('setCloseH'),0,23,DEFAULT_SETTINGS.closeHour));
+      state.settings.closeMinute=Math.round(clamp(gv('setCloseM'),0,59,DEFAULT_SETTINGS.closeMinute));
       if(!saveAndClose())return;
       showToast('已保存',true);
-      break;
+      return;
     }
-    case 'export-json':exportJSON();break;
-    case 'export-stock-csv':exportStockCSV();break;
-    case 'export-csv':exportLossCSV();break;
-    case 'copy-shoplist':copyShopList();break;
-    case 'trigger-import':currentActionLabel='导入数据';$('importFile').click();break;
-    case 'cal-prev':calOffset--;render(true);break;
-    case 'cal-next':calOffset++;render(true);break;
-    case 'cal-day':calDaySheet(el.dataset.date);break;
-    case 'clean-old-data':{
+};
+const act_export_json=(el,id)=>{
+exportJSON();return;
+};
+const act_export_stock_csv=(el,id)=>{
+exportStockCSV();return;
+};
+const act_export_csv=(el,id)=>{
+exportLossCSV();return;
+};
+const act_copy_shoplist=(el,id)=>{
+copyShopList();return;
+};
+const act_trigger_import=(el,id)=>{
+currentActionLabel='导入数据';$('importFile').click();return;
+};
+const act_cal_prev=(el,id)=>{
+calOffset--;render(true);return;
+};
+const act_cal_next=(el,id)=>{
+calOffset++;render(true);return;
+};
+const act_cal_day=(el,id)=>{
+calDaySheet(el.dataset.date);return;
+};
+const act_clean_old_data=(el,id)=>{
+{
       if(!confirm('清理历史数据？'))return;
       addSnapshot('清理前');
       const t=today();let rb=0,rl=0;const removed=new Set();
@@ -1785,35 +2351,132 @@ document.addEventListener('click',e=>{
       if(!persist())return;
       render(true);
       showToast(`清理完成：批次 ${rb} 条，记录 ${rl} 条`,true);
-      break;
+      return;
     }
-    case 'reset-all':resetConfirmSheet();break;
-    case 'do-reset-all':{
+};
+const act_reset_all=(el,id)=>{
+resetConfirmSheet();return;
+};
+const act_do_reset_all=(el,id)=>{
+{
       if(gv('resetConfirm').trim()!=='清空全部'){alert('请输入「清空全部」后再确认');return;}
       addSnapshot('清空前');
       const backup=state;state=defaultState();
-      if(!persist()){state=backup;return;}
+      if(!persistNow()){state=backup;return;}
       currentTab='home';
       resetUI();render(false);
       showToast('已清空全部数据',true);
-      break;
+      return;
     }
+};
+reg('close-sheet',act_close_sheet);
+reg('go-back',act_go_back);
+reg('open-sub',act_open_sub);
+reg('clear-stock-search',act_clear_stock_search);
+reg('clear-log-search',act_clear_log_search);
+reg('toggle-soon',act_toggle_soon);
+reg('toggle-sort',act_toggle_sort);
+reg('jump-today',act_jump_today);
+reg('jump-soon',act_jump_soon);
+reg('toggle-log-month',act_toggle_log_month);
+reg('set-view',act_set_view);
+reg('toast-undo',act_toast_undo);
+reg('undo-last',act_undo_last);
+reg('set-theme',act_set_theme);
+reg('snapshot-manager',act_snapshot_manager);
+reg('create-snapshot',act_create_snapshot);
+reg('restore-snapshot',act_restore_snapshot);
+reg('refresh-health',act_refresh_health);
+reg('open-mat-detail',act_open_mat_detail);
+reg('toggle-pin',act_toggle_pin);
+reg('open-add-batch',act_open_add_batch);
+reg('open-edit-batch',act_open_edit_batch);
+reg('open-add-material',act_open_add_material);
+reg('open-edit-material',act_open_edit_material);
+reg('add-cat',act_add_cat);
+reg('edit-cat',act_edit_cat);
+reg('add-rule',act_add_rule);
+reg('edit-rule',act_edit_rule);
+reg('batch-manage-cat',act_batch_manage_cat);
+reg('open-stocktake',act_open_stocktake);
+reg('snooze',act_snooze);
+reg('card-open-first',act_card_open_first);
+reg('card-loss-earliest',act_card_loss_earliest);
+reg('loss',act_loss);
+reg('loss-all',act_loss_all);
+reg('undo-loss',act_undo_loss);
+reg('quick-open-batch',act_quick_open_batch);
+reg('do-quick-open',act_do_quick_open);
+reg('quick-used',act_quick_used);
+reg('open-split',act_open_split);
+reg('do-split',act_do_split);
+reg('sp-preset',act_sp_preset);
+reg('thaw-batch',act_thaw_batch);
+reg('save-stocktake',act_save_stocktake);
+reg('do-snooze',act_do_snooze);
+reg('unsnooze',act_unsnooze);
+reg('toggle-loss-reason',act_toggle_loss_reason);
+reg('count-step',act_count_step);
+reg('do-loss',act_do_loss);
+reg('extend-batch',act_extend_batch);
+reg('save-batch-cat',act_save_batch_cat);
+reg('quick-make-sheet',act_quick_make_sheet);
+reg('do-quick-make',act_do_quick_make);
+reg('quick-clean',act_quick_clean);
+reg('save-batch',act_save_batch);
+reg('delete-batch',act_delete_batch);
+reg('save-material',act_save_material);
+reg('delete-material',act_delete_material);
+reg('do-delete-material',act_do_delete_material);
+reg('save-cat',act_save_cat);
+reg('del-cat',act_del_cat);
+reg('save-rule',act_save_rule);
+reg('del-rule',act_del_rule);
+reg('save-settings',act_save_settings);
+reg('export-json',act_export_json);
+reg('export-stock-csv',act_export_stock_csv);
+reg('export-csv',act_export_csv);
+reg('copy-shoplist',act_copy_shoplist);
+reg('trigger-import',act_trigger_import);
+reg('cal-prev',act_cal_prev);
+reg('cal-next',act_cal_next);
+reg('cal-day',act_cal_day);
+reg('clean-old-data',act_clean_old_data);
+reg('reset-all',act_reset_all);
+reg('do-reset-all',act_do_reset_all);
+
+document.addEventListener('click',e=>{
+  const tabBtn=e.target.closest('.tb button');
+  if(tabBtn){
+    const nt=tabBtn.dataset.tab;
+    if(nt !== currentTab){ stockQuery=''; stockView=''; stockSort='default'; logQuery=''; calOffset=0; }
+    currentTab=nt; subView=''; render(false); return;
   }
+  const el=e.target.closest('[data-action]');if(!el)return;
+  lastUndoAt=0;
+  const a=el.dataset.action,id=el.dataset.id;
+  if(UNDO_LABELS[a])currentActionLabel=UNDO_LABELS[a];
+  const act=ACTIONS[a];
+  if(!act)return;
+  act(el,id);
 });
 document.addEventListener('input',e=>{
   if(e.target.id==='stockSearch'){stockQuery=e.target.value;applyStockFilter();}
   else if(e.target.id==='logSearch'){logQuery=e.target.value;applyLogFilter();}
 });
 document.addEventListener('keydown',e=>{
-  if(!(e.ctrlKey||e.metaKey)||e.shiftKey||e.key.toLowerCase()!=='z')return;
   const ae=document.activeElement;
+  if((e.key==='Enter'||e.key===' ')&&ae&&ae.matches('[data-action]')&&!ae.matches('button,a,input,textarea,select')){
+    e.preventDefault();ae.click();return;
+  }
+  if(!(e.ctrlKey||e.metaKey)||e.shiftKey||e.key.toLowerCase()!=='z')return;
   if(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))return;
   if($('mask').classList.contains('show'))return;
   e.preventDefault();undoLast();
 });
 let lpTimer=null,lpFired=false,lpStart=null,lpBlockUntil=0;
 const cancelLongPress=()=>{clearTimeout(lpTimer);lpStart=null;};
-const endLongPress=()=>{if(lpFired)lpBlockUntil=Date.now()+300;cancelLongPress();};
+const endLongPress=()=>{if(lpFired)lpBlockUntil=Date.now()+120;cancelLongPress();};
 document.addEventListener('pointerdown',e=>{
   if(e.button!==undefined&&e.button!==0)return;
   const card=e.target.closest('.scard');if(!card)return;
@@ -1824,7 +2487,7 @@ document.addEventListener('pointerdown',e=>{
     lpFired=true;lpBlockUntil=Date.now()+350;
     cardMenuSheet(card.dataset.id);
     vib(15);
-    setTimeout(()=>{lpFired=false;},700);
+    setTimeout(()=>{lpFired=false;},400);
   },500);
 });
 document.addEventListener('pointermove',e=>{
@@ -1834,7 +2497,7 @@ document.addEventListener('pointermove',e=>{
 document.addEventListener('pointerup',endLongPress);
 document.addEventListener('pointercancel',endLongPress);
 document.addEventListener('click',e=>{
-  if(lpFired||Date.now()<lpBlockUntil){
+  if(e.target.closest('.scard')&&(lpFired||Date.now()<lpBlockUntil)){
     if(Date.now()<lpBlockUntil){e.preventDefault();e.stopPropagation();}
     lpFired=false;
   }
@@ -1843,6 +2506,23 @@ document.addEventListener('contextmenu',e=>{if(e.target.closest('.scard'))e.prev
 
 /* ===== 初始化与跨天刷新 ===== */
 (function init(){
+  const storageAvailable = (() => {
+    try {
+      const k = '__rabbit_probe__';
+      localStorage.setItem(k, '1');
+      localStorage.removeItem(k);
+      return true;
+    } catch (e) { return false; }
+  })();
+
+  if (!storageAvailable) {
+    const warn = document.getElementById('storageWarn');
+    if (warn) {
+      warn.innerHTML = '当前浏览器环境不支持本地存储（可能为无痕/私有模式），<b>数据不会保存</b>。建议使用正常模式。';
+      warn.classList.add('show');
+    }
+  }
+
   if(!loadOK){
     try{
       const raw=localStorage.getItem(DB_KEY);
@@ -1855,13 +2535,26 @@ document.addEventListener('contextmenu',e=>{if(e.target.closest('.scard'))e.prev
   try{currentTheme=localStorage.getItem(THEME_KEY)==='blue'?'blue':'paper';}catch(e){currentTheme='paper';}
   applyTheme(currentTheme,false);
   ensureDailySnapshot();
+  const pruneResult = autoPruneData();
+  if (pruneResult.prunedLosses > 0 || pruneResult.prunedBatches > 0) {
+    try { localStorage.setItem(DB_KEY, JSON.stringify(state)); } catch(e) {}
+    setTimeout(() => {
+      showToast(`已自动归档：${pruneResult.prunedLosses} 条报损记录、${pruneResult.prunedBatches} 个历史批次`);
+    }, 800);
+  }
   lastSavedState=JSON.stringify(state);
   undoReady=true;
   render(false);
   
   let currentDayStr = todayStr();
+  window.addEventListener('beforeunload',()=>{
+    if(_persistTimer){clearTimeout(_persistTimer);persistNow();}
+  });
   document.addEventListener('visibilitychange',()=>{
-    if(document.hidden)return;
+    if(document.hidden){
+      if(_persistTimer){clearTimeout(_persistTimer);persistNow();}
+      return;
+    }
     if($('mask').classList.contains('show'))return;
     
     if(todayStr() !== currentDayStr){
